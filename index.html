@@ -1,0 +1,1295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>义巷·漫游集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fbf8f2; --cream:#f5eee2; --ink:#1d1a17; --ink2:#5d554c; --ink3:#958b80;
+  --rose:#d43a7f; --rose2:#f28bb6; --brick:#a64a33; --gold:#c9a76b; --leaf:#5d8a48; --night:#0f0d0c;
+  --serif:"Noto Serif SC","Songti SC","STSong",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --latin:"Cormorant Garamond",Georgia,serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#080706;overflow:hidden;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:lining-nums}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--s,.5));overflow:hidden;background:var(--paper);cursor:pointer;user-select:none}
+.slide{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;background:var(--paper);transition:opacity .7s ease,visibility 0s .7s}
+.slide.on{opacity:1;visibility:visible;transition:opacity .9s ease;z-index:2}
+.dark{background:var(--night);color:#f3ede4}
+.cream{background:var(--cream)}
+.bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.shade{position:absolute;inset:0}
+img{display:block}
+
+/* ---------- entrance animation system ---------- */
+.fx{opacity:0;transition:opacity .35s,transform .35s,clip-path .35s,filter .35s}
+.fx.up{transform:translateY(56px)} .fx.down{transform:translateY(-56px)}
+.fx.left{transform:translateX(-90px)} .fx.right{transform:translateX(90px)}
+.fx.zoom{transform:scale(.86)} .fx.blur{filter:blur(18px)}
+.fx.wipe{opacity:1;clip-path:inset(0 100% 0 0)} .fx.rise{opacity:1;clip-path:inset(100% 0 0 0)}
+.fx.iris{opacity:1;clip-path:circle(0% at 50% 50%)}
+.on .fx{opacity:1;transform:none;filter:none;
+  transition:opacity 1s var(--ease) var(--d,0s),transform 1.25s var(--ease) var(--d,0s),clip-path 1.5s cubic-bezier(.75,0,.2,1) var(--d,0s),filter 1.2s ease var(--d,0s)}
+.on .fx.wipe,.on .fx.rise{clip-path:inset(0 0 0 0)}
+.on .fx.iris{clip-path:circle(75% at 50% 50%)}
+.chars span{display:inline-block;opacity:0;transform:translateY(.45em) rotate(6deg);filter:blur(8px);transition:all .3s}
+.on .chars span{opacity:1;transform:none;filter:none;transition:opacity .9s var(--ease) var(--d),transform 1.1s var(--ease) var(--d),filter 1s ease var(--d)}
+.kb{will-change:transform}
+.on .kb{animation:kb var(--kbd,18s) ease-out both}
+@keyframes kb{from{transform:scale(1.16) translate(var(--kx,1.5%),var(--ky,1%))}to{transform:scale(1.02) translate(0,0)}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .3s}
+.on .draw{stroke-dashoffset:0;transition:stroke-dashoffset var(--t,1.8s) cubic-bezier(.6,0,.2,1) var(--d,0s)}
+.pop{transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .3s}
+.on .pop{transform:scale(1);transition:transform .8s cubic-bezier(.3,1.6,.5,1) var(--d,0s)}
+.bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.on .bar i{transform:scaleX(1);transition:transform 1.6s var(--ease) var(--d,0s)}
+
+/* ---------- shared chrome ---------- */
+.hd{position:absolute;left:110px;top:64px;display:flex;align-items:baseline;gap:22px;z-index:5}
+.hd b{font-family:var(--serif);font-weight:500;font-size:40px;letter-spacing:.08em}
+.hd span{font-family:var(--latin);font-size:22px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink3)}
+.hd::before{content:"";position:absolute;left:-30px;top:10px;width:6px;height:36px;background:var(--rose);border-radius:3px}
+.dark .hd span{color:#a39889}
+.pg{position:absolute;right:110px;top:72px;font-family:var(--latin);font-size:22px;letter-spacing:.3em;color:var(--ink3);z-index:5}
+.dark .pg{color:#8d8377}
+.latin{font-family:var(--latin);letter-spacing:.3em;text-transform:uppercase}
+.rose{color:var(--rose)}
+.frame{background:#fff;box-shadow:0 30px 60px -30px rgba(40,20,10,.35);border-radius:6px;overflow:hidden}
+.frame img{width:100%;height:100%;object-fit:cover}
+p{margin:0}
+
+/* ---------- cover ---------- */
+.cover-txt{position:absolute;left:150px;top:230px;width:1500px}
+.cover-txt .eyebrow{font-size:28px;letter-spacing:.5em;color:#e9ddc9}
+.cover h1{white-space:nowrap;font-family:var(--serif);font-weight:700;font-size:180px;line-height:1.15;margin:36px 0 10px;letter-spacing:.06em;color:#fff;text-shadow:0 10px 50px rgba(0,0,0,.4)}
+.cover .lt{font-size:34px;color:var(--rose2)}
+.cover .rule{width:520px;height:2px;margin:56px 0 40px;background:linear-gradient(90deg,var(--rose),transparent)}
+.cover .slogan{font-family:var(--serif);font-size:48px;letter-spacing:.4em;color:#f5ead8}
+.cover .meta{position:absolute;left:150px;bottom:110px;font-size:24px;letter-spacing:.3em;color:#cbbda9}
+
+/* ---------- TOC ---------- */
+.toc-l{position:absolute;left:150px;top:180px}
+.toc-l .big{font-family:var(--serif);font-size:120px;font-weight:300;letter-spacing:.2em}
+.toc-l .latin{font-size:46px;color:var(--rose2);margin-top:10px}
+.toc-list{position:absolute;left:820px;right:150px;top:170px;list-style:none;margin:0;padding:0}
+.toc-list li{display:flex;align-items:center;gap:40px;height:118px;border-bottom:1px solid rgba(255,255,255,.14);cursor:pointer}
+.toc-list li:hover .q{color:var(--rose2)}
+.toc-list .n{font-family:var(--latin);font-size:30px;letter-spacing:.3em;color:#9c907f;width:180px}
+.toc-list .n em{font-style:normal;font-size:64px;color:var(--rose2);letter-spacing:0;margin-left:6px}
+.toc-list .q{font-family:var(--serif);font-size:40px;letter-spacing:.12em;transition:color .3s}
+
+/* ---------- dividers ---------- */
+.divi .pic{position:absolute;left:0;top:0;width:1060px;height:1080px;overflow:hidden}
+.divi .pic .bg{transform-origin:center}
+.divi .arch{position:absolute;left:880px;top:-2px;right:0;bottom:0;background:var(--cream);border-top-left-radius:620px 760px}
+.divi .part{position:absolute;left:1040px;top:300px;font-family:var(--latin);font-weight:300;font-size:120px;letter-spacing:.12em;color:#b9ad9e;line-height:1}
+.divi .part em{font-style:normal;font-size:250px;color:var(--rose);margin-left:24px;vertical-align:-14px;font-weight:300}
+.divi .q{position:absolute;left:1050px;top:670px;font-family:var(--serif);font-size:62px;letter-spacing:.1em;color:var(--ink)}
+.divi .en{position:absolute;left:1054px;top:780px;font-size:24px;color:var(--ink3)}
+.divi .ln{position:absolute;left:1054px;top:640px;width:660px;height:2px;background:var(--rose)}
+
+/* ---------- part 1 ---------- */
+.loc-l{position:absolute;left:110px;top:200px;width:620px}
+.stat-row{display:flex;gap:30px;margin-bottom:56px}
+.stat{flex:1;padding:26px 28px;border-radius:10px;background:#fff;box-shadow:0 20px 40px -26px rgba(60,30,10,.3)}
+.stat .v{font-family:var(--latin);font-size:96px;line-height:1;color:var(--rose);font-weight:500}
+.stat .v small{font-size:36px;margin-left:6px;color:var(--ink2)}
+.stat .k{font-size:22px;color:var(--ink2);margin-top:10px;letter-spacing:.1em}
+.dir{display:flex;gap:22px;margin-bottom:34px}
+.dir .ic{flex:none;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:30px;color:#fff;background:var(--rose)}
+.dir.b .ic{background:var(--leaf)}
+.dir h4{margin:0 0 8px;font-family:var(--serif);font-size:30px;font-weight:500}
+.dir p{font-size:22px;line-height:1.7;color:var(--ink2)}
+.loc-r{position:absolute;left:790px;top:170px;width:1020px;height:722px}
+.pulse{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--rose)}
+.pulse::before,.pulse::after{content:"";position:absolute;inset:-6px;border:3px solid var(--rose);border-radius:50%;animation:ring 2.2s ease-out infinite}
+.pulse::after{animation-delay:1.1s}
+@keyframes ring{from{transform:scale(.6);opacity:1}to{transform:scale(3.2);opacity:0}}
+
+.ov-grid{position:absolute;left:110px;top:200px;width:760px;display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.ov-grid .stat .v{font-size:76px}
+.share{position:absolute;left:110px;top:720px;width:760px}
+.share .lbl{display:flex;justify-content:space-between;font-size:22px;color:var(--ink2);margin-bottom:14px}
+.share .track{height:46px;border-radius:23px;overflow:hidden;display:flex;background:#eee6da}
+.share .track .bar{height:100%}
+.share .track .bar i{background:var(--brick)}
+.share .track .bar.g i{background:var(--leaf)}
+.share .note{font-size:20px;color:var(--ink3);margin-top:16px;line-height:1.6}
+.ov-r{position:absolute;left:940px;top:200px;width:880px;height:466px}
+.ov-cap{position:absolute;left:940px;top:700px;width:880px;font-size:22px;line-height:1.8;color:var(--ink2)}
+
+.two{position:absolute;left:110px;right:110px;top:180px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:60px}
+.two h3{font-family:var(--serif);font-weight:500;font-size:36px;margin:0 0 6px;letter-spacing:.1em}
+.two h3 small{font-family:var(--latin);font-size:20px;letter-spacing:.3em;color:var(--ink3);margin-left:14px}
+.two .txt{font-size:22px;line-height:1.75;color:var(--ink2);margin:10px 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{padding:8px 20px;border-radius:30px;font-size:20px;background:#fff;border:1px solid #e6dccd;color:var(--ink2)}
+.chip i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:10px;vertical-align:-1px}
+.sw{display:flex;gap:18px;margin:14px 0 20px}
+.sw div{width:150px;height:96px;border-radius:8px;display:flex;align-items:flex-end;padding:10px 14px;font-size:20px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:14px 10px;font-size:22px;line-height:1.6;color:var(--ink2)}
+.kv b{font-family:var(--serif);color:var(--ink);font-weight:500}
+
+/* ---------- cases ---------- */
+.cases{position:absolute;left:110px;right:110px;top:190px;bottom:80px;display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+.case{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 30px 50px -30px rgba(60,30,10,.35);display:flex;flex-direction:column}
+.case .im{height:360px;overflow:hidden}
+.case .im img{width:100%;height:100%;object-fit:cover;transition:transform 6s ease}
+.on .case .im img{transform:scale(1.08)}
+.case .bd{padding:28px 30px;display:flex;flex-direction:column;flex:1}
+.case .nm{font-family:var(--serif);font-size:34px;font-weight:500;letter-spacing:.06em}
+.case .en{font-family:var(--latin);font-size:19px;letter-spacing:.2em;color:var(--ink3);margin:4px 0 22px}
+.case .jj{font-size:20px;color:var(--ink3)}
+.case .pt{font-family:var(--serif);font-size:30px;color:var(--rose);line-height:1.35;margin:6px 0 20px}
+.case .tg{display:flex;flex-direction:column;gap:8px;font-size:20px;color:var(--ink2)}
+.case .tg span::before{content:"— ";color:var(--gold)}
+.case .mt{margin-top:auto;padding-top:18px;border-top:1px dashed #e2d8ca;font-size:18px;color:var(--ink3);line-height:1.7}
+
+.sum-l{position:absolute;left:150px;top:350px;width:560px}
+.sum-l .t{font-family:var(--serif);font-size:72px;line-height:1.3;font-weight:500;letter-spacing:.1em}
+.sum-l .latin{font-size:20px;color:#9b8f80;margin-top:30px;line-height:1.8;letter-spacing:.2em}
+.sum-list{position:absolute;left:820px;right:150px;top:220px}
+.sum-list .it{display:grid;grid-template-columns:120px 1fr;align-items:center;padding:34px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.sum-list .n{font-family:var(--latin);font-size:80px;color:var(--rose2);line-height:1}
+.sum-list .c{font-family:var(--serif);font-size:46px;letter-spacing:.14em}
+.sum-list .e{font-family:var(--latin);font-size:22px;color:#9b8f80;margin-top:6px;letter-spacing:.06em;font-style:italic}
+
+/* ---------- part 3 ---------- */
+.pos-c{position:absolute;left:0;right:0;top:300px;text-align:center}
+.pos-c .out{font-family:var(--latin);font-size:132px;letter-spacing:.14em;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.55);line-height:1}
+.pos-c h2{font-family:var(--serif);font-size:118px;font-weight:700;margin:40px 0 0;letter-spacing:.18em;color:#fff}
+.pos-c h2 i{font-style:normal;color:var(--rose2);margin:0 .3em}
+.pos-c .sub{font-size:34px;margin-top:56px;letter-spacing:.2em;color:#efe4d3}
+.pos-c .sub2{font-family:var(--latin);font-size:20px;letter-spacing:.24em;color:#b8ab99;margin-top:20px}
+
+.cols3{position:absolute;left:110px;right:110px;top:190px;bottom:80px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.pcol{position:relative;border-radius:12px;overflow:hidden;background:#1b1714;color:#f3ede4;display:flex;flex-direction:column}
+.pcol .im{height:400px;overflow:hidden;position:relative}
+.pcol .im img{width:100%;height:100%;object-fit:cover}
+.pcol .im::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,#1b1714)}
+.pcol .bd{padding:0 40px 40px;margin-top:-50px;position:relative}
+.pcol .no{font-family:var(--latin);font-size:24px;letter-spacing:.3em;color:var(--rose2)}
+.pcol h3{font-family:var(--serif);font-size:46px;font-weight:500;margin:10px 0 34px;letter-spacing:.1em}
+.pcol h3 small{display:block;font-size:22px;color:#a99d8c;letter-spacing:.2em;margin-bottom:8px;font-weight:300}
+.pcol .row{padding:24px 0;border-top:1px solid rgba(255,255,255,.12)}
+.pcol .row b{display:block;font-size:28px;font-weight:500;color:#fff;margin-bottom:10px}
+.pcol .row span{font-size:23px;color:#bfb3a2;line-height:1.6}
+.pcol .tag{display:inline-block;font-size:18px;padding:2px 12px;border-radius:12px;background:var(--rose);color:#fff;margin-right:10px;vertical-align:3px}
+.pcol .tag.g{background:var(--leaf)}
+
+.strat{position:absolute;left:110px;right:110px;top:190px;bottom:80px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:30px}
+.st{position:relative;background:#fff;border-radius:12px;padding:40px 44px;overflow:hidden;box-shadow:0 26px 50px -34px rgba(60,30,10,.4)}
+.st::after{content:"";position:absolute;right:-60px;bottom:-60px;width:220px;height:220px;border-radius:50%;border:2px solid rgba(212,58,127,.12)}
+.st .no{font-family:var(--latin);font-size:60px;line-height:1;color:var(--rose)}
+.st h3{font-family:var(--serif);font-size:44px;font-weight:500;margin:18px 0 6px;letter-spacing:.12em}
+.st .en{font-family:var(--latin);font-size:19px;letter-spacing:.36em;color:var(--ink3)}
+.st p{font-size:21px;line-height:1.75;color:var(--ink2);margin-top:20px;position:relative}
+.st .grp{position:absolute;right:40px;top:44px;font-size:18px;color:var(--ink3);letter-spacing:.2em}
+
+/* fast / slow */
+.fs .streaks{position:absolute;inset:0;overflow:hidden;opacity:0}
+.on.fs .streaks{animation:fastPhase 5.2s ease forwards}
+@keyframes fastPhase{0%{opacity:0}8%{opacity:1}68%{opacity:1}100%{opacity:0}}
+.streaks i{position:absolute;height:2px;left:-40%;width:30%;background:linear-gradient(90deg,transparent,rgba(255,120,180,.9),#fff);animation:zip var(--sp) linear infinite;animation-delay:var(--dl)}
+@keyframes zip{to{transform:translateX(480%)}}
+.fs .fastt{position:absolute;left:150px;top:330px;opacity:0}
+.on.fs .fastt{animation:fastPhase 5.2s ease forwards}
+.fs .fastt .w{font-family:var(--latin);font-size:300px;line-height:.9;font-style:italic;color:#fff;letter-spacing:.04em}
+.fs .fastt p{font-size:40px;color:#f2e6d6;margin-top:30px;letter-spacing:.12em}
+.fs .slow{position:absolute;inset:0}
+.motes i{position:absolute;width:var(--z);height:var(--z);border-radius:50%;background:rgba(255,226,190,.75);box-shadow:0 0 18px rgba(255,200,150,.8);animation:drift var(--sp) ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(var(--mx),var(--my))}}
+.fs .slowt{position:absolute;right:150px;top:240px;text-align:right}
+.fs .slowt .w{font-family:var(--latin);font-size:240px;line-height:.9;font-weight:300;color:#f6ead8;letter-spacing:.3em}
+.fs .slowt p{font-size:36px;color:#f2e6d6;margin-top:26px;letter-spacing:.12em}
+.fs .theme{position:absolute;left:0;right:0;bottom:150px;text-align:center}
+.fs .theme h2{font-family:var(--serif);font-size:110px;margin:0;color:#fff;letter-spacing:.16em;font-weight:700}
+.fs .theme .latin{font-size:26px;color:var(--rose2);margin-top:18px}
+.fs .theme .s{font-family:var(--serif);font-size:44px;letter-spacing:.6em;color:#f2e6d6;margin-top:26px}
+
+.lang{position:absolute;left:110px;right:110px;top:200px;height:560px}
+.lang-txt{position:absolute;left:110px;right:110px;bottom:90px;display:grid;grid-template-columns:1fr 1fr;gap:80px}
+.lang-txt h4{font-family:var(--serif);font-size:38px;margin:0 0 12px;font-weight:500;color:var(--rose2);letter-spacing:.14em}
+.lang-txt p{font-size:24px;line-height:1.8;color:#d9cdbb}
+
+/* ---------- part 4 ---------- */
+.mp{position:absolute;left:60px;right:60px;top:170px;height:536px;border-radius:10px;overflow:hidden;background:#cfd6cc}
+.mp img{width:100%;height:100%;object-fit:cover}
+.hot{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:4px solid var(--rose);box-shadow:0 0 0 9999px rgba(15,10,8,.0);opacity:0;transform:scale(2);transition:all .6s var(--ease)}
+.hot.show{opacity:1;transform:scale(1)}
+.hot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--rose);animation:ring 1.6s ease-out infinite}
+.legend{position:absolute;left:110px;right:110px;top:740px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px 20px;list-style:none;margin:0;padding:0}
+.legend li{font-size:22px;padding:10px 14px;border-radius:8px;color:var(--ink2);transition:all .4s}
+.legend li b{font-family:var(--latin);font-size:26px;color:var(--rose);margin-right:10px;font-weight:500}
+.legend li.cur{background:var(--rose);color:#fff}
+.legend li.cur b{color:#fff}
+
+.sec-img{position:absolute;left:110px;top:180px;width:1000px;height:707px}
+.sec-r{position:absolute;left:1170px;right:110px;top:190px}
+.sec-r h3{font-family:var(--serif);font-size:40px;font-weight:500;margin:0 0 30px;letter-spacing:.1em}
+.strip{display:flex;height:120px;border-radius:10px;overflow:hidden;margin-bottom:12px}
+.strip .bar i{width:100%;height:100%;display:grid;place-items:center;font-style:normal;font-size:26px;color:#fff;font-family:var(--serif)}
+.reasons{list-style:none;padding:0;margin:40px 0 0;counter-reset:r}
+.reasons li{counter-increment:r;position:relative;padding:18px 0 18px 70px;font-size:24px;line-height:1.6;color:var(--ink2);border-bottom:1px solid #e9dfd1}
+.reasons li::before{content:counter(r,decimal-leading-zero);position:absolute;left:0;top:12px;font-family:var(--latin);font-size:40px;color:var(--rose)}
+
+.fn-svg{position:absolute;left:110px;right:110px;top:250px;height:600px}
+.fn-title{position:absolute;left:110px;top:150px;right:110px;font-size:22px;color:var(--ink2)}
+.fn-title b{font-family:var(--serif);font-size:56px;color:var(--rose);font-weight:500;letter-spacing:.14em;margin-right:30px}
+.fn-foot{position:absolute;left:110px;right:110px;bottom:70px;display:flex;gap:60px;font-size:24px;color:var(--ink2)}
+.fn-foot b{font-family:var(--serif);color:var(--ink);margin-right:8px}
+.flow{stroke-dasharray:10 12;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-22}}
+
+/* ---------- part 5 ---------- */
+.dist-t{position:absolute;left:110px;top:110px}
+.dist-t .c{font-family:var(--serif);font-size:96px;font-weight:500;letter-spacing:.2em}
+.dist-t .latin{font-size:30px;color:var(--rose2);margin-top:8px}
+.tiles{position:absolute;left:110px;right:110px;top:340px;bottom:90px;display:flex;gap:28px}
+.tile{flex:1;position:relative;overflow:hidden;border-radius:260px 260px 10px 10px}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 8s ease}
+.on .tile img{transform:scale(1.12)}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72))}
+.tile .tx{position:absolute;left:0;right:0;bottom:44px;text-align:center;z-index:2;color:#fff}
+.tile .big{font-family:var(--serif);font-size:130px;line-height:1;font-weight:500}
+.tile .latin{font-size:24px;letter-spacing:.5em;margin:14px 0 20px;color:#f3d9e6}
+.tile .nm{font-family:var(--serif);font-size:36px;letter-spacing:.2em}
+.tile .fn{font-size:22px;color:#e2d5c3;margin-top:6px;letter-spacing:.2em}
+
+.zone .zl{position:absolute;left:110px;top:120px;width:600px}
+.zone .kick{font-size:20px;letter-spacing:.3em;color:var(--ink3)}
+.zone h2{font-family:var(--serif);font-size:84px;font-weight:500;letter-spacing:.24em;margin:20px 0 4px}
+.zone .zen{font-family:var(--latin);font-style:italic;font-size:32px;color:var(--rose);letter-spacing:.06em}
+.zone .theme{display:flex;align-items:center;gap:20px;margin:34px 0 28px}
+.zone .theme .ch{width:84px;height:84px;border-radius:50%;background:var(--rose);color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:44px}
+.zone .theme span{font-family:var(--serif);font-size:30px;letter-spacing:.3em;color:var(--ink2)}
+.zone .items{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;list-style:none;margin:0;padding:0}
+.zone .items li{font-size:23px;color:var(--ink2)}
+.zone .items li b{font-family:var(--latin);font-weight:500;color:var(--rose);font-size:26px;margin-right:10px}
+.zone .plan{position:absolute;left:110px;bottom:64px;width:560px;height:396px;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 30px 60px -30px rgba(60,30,10,.45)}
+.zone .plan img{width:100%;height:100%;object-fit:contain}
+.zone .plan em{position:absolute;left:14px;top:12px;font-style:normal;font-size:16px;letter-spacing:.2em;background:var(--ink);color:#fff;padding:2px 10px;border-radius:4px}
+.zone .zr{position:absolute;left:770px;right:0;top:0;bottom:0;border-top-left-radius:420px;overflow:hidden;background:#222}
+.gal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.6s ease}
+.gal img.cur{opacity:1;animation:kb 9s ease-out both}
+.gal .cap{position:absolute;right:50px;bottom:40px;z-index:3;display:flex;align-items:center;gap:16px;color:#fff;font-size:20px;letter-spacing:.2em;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.gal .dots{display:flex;gap:8px}
+.gal .dots i{width:30px;height:4px;border-radius:2px;background:rgba(255,255,255,.4);transition:background .4s}
+.gal .dots i.cur{background:#fff}
+.gal .quote{position:absolute;left:270px;top:80px;z-index:3;color:#fff;max-width:900px;text-shadow:0 2px 16px rgba(0,0,0,.6)}
+.gal .quote b{display:block;font-family:var(--serif);font-size:38px;font-weight:500;letter-spacing:.2em;margin-bottom:14px}
+.gal .quote span{font-family:var(--serif);font-size:28px;letter-spacing:.14em;line-height:1.8;color:#ffe5ef}
+.gal::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.35),transparent 30%);pointer-events:none;z-index:2}
+
+/* ---------- part 6 ---------- */
+.pc-l{position:absolute;left:110px;top:200px;width:720px}
+.pc-l h2{font-family:var(--serif);font-size:66px;font-weight:700;letter-spacing:.1em;margin:0;white-space:nowrap}
+.pc-l h2 i{font-style:normal;color:var(--rose)}
+.pc-l .latin{font-size:20px;color:var(--ink3);margin:16px 0 36px}
+.pc-l .lead{font-size:26px;line-height:1.8;color:var(--ink);margin-bottom:26px;font-family:var(--serif)}
+.pc-l ul{list-style:none;margin:0;padding:0}
+.pc-l li{position:relative;padding:14px 0 14px 34px;font-size:22px;line-height:1.75;color:var(--ink2)}
+.pc-l li::before{content:"";position:absolute;left:4px;top:28px;width:12px;height:12px;border-radius:50%;background:var(--leaf)}
+.pc-r{position:absolute;left:900px;right:0;top:0;bottom:0;border-top-left-radius:420px;overflow:hidden}
+
+.feat{position:absolute;left:110px;right:110px;top:190px;bottom:80px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.fc{position:relative;border-radius:200px 200px 12px 12px;overflow:hidden;color:#fff}
+.fc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(40,10,25,.86) 75%)}
+.fc .tx{position:absolute;left:40px;right:40px;bottom:40px;z-index:2}
+.fc .latin{font-size:46px;letter-spacing:.4em;color:rgba(255,255,255,.5);font-weight:300}
+.fc h3{font-family:var(--serif);font-size:40px;font-weight:500;margin:8px 0 16px;letter-spacing:.1em}
+.fc p{font-size:21px;line-height:1.75;color:#f1e3ea}
+
+.pw{position:absolute;left:110px;right:110px;top:180px}
+.pw h4{font-family:var(--serif);font-weight:500;font-size:26px;margin:0 0 12px;letter-spacing:.3em;color:var(--ink2)}
+.pw .row{display:grid;grid-template-columns:repeat(9,1fr);gap:12px;margin-bottom:26px}
+.pl{position:relative}
+.pl .ph{height:196px;border-radius:8px;overflow:hidden}
+.pl .ph img{width:100%;height:100%;object-fit:cover}
+.pl span{display:block;font-size:19px;text-align:center;margin-top:6px;color:var(--ink2)}
+.pw .sp{grid-column:span 1}
+.flip{opacity:0;transform:perspective(800px) rotateY(80deg);transition:all .3s}
+.on .flip{opacity:1;transform:none;transition:opacity .6s ease var(--d),transform 1s var(--ease) var(--d)}
+
+.eight{position:absolute;left:110px;right:110px;top:190px;bottom:80px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:26px}
+.e8{background:#fff;border-radius:12px;padding:30px 32px;box-shadow:0 24px 46px -32px rgba(60,30,10,.4);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.e8 .no{font-family:var(--serif);font-size:22px;color:var(--ink3);letter-spacing:.2em}
+.e8 h3{font-family:var(--serif);font-size:38px;font-weight:500;margin:6px 0 14px;letter-spacing:.14em}
+.e8 .ss{display:flex;gap:8px;margin-bottom:16px}
+.e8 .ss i{font-style:normal;font-size:18px;padding:3px 14px;border-radius:14px;color:#fff}
+.s-spr{background:#e48aa9}.s-sum{background:#5d9a4a}.s-aut{background:#d06a2b}
+.e8 .tr{font-size:20px;color:var(--ink);margin-bottom:10px}
+.e8 .tr b{color:var(--leaf);font-weight:500}
+.e8 p{font-size:19px;line-height:1.7;color:var(--ink2)}
+.e8 .leafbar{position:absolute;left:0;right:0;bottom:0;height:6px}
+
+.pv{position:absolute;left:110px;top:180px;width:1060px;height:698px}
+.pv-r{position:absolute;left:1230px;right:110px;top:190px}
+.pv-r h3{font-family:var(--serif);font-size:30px;font-weight:500;margin:0 0 18px;letter-spacing:.2em}
+.mats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px}
+.mat{height:120px;border-radius:8px;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.mat span{position:absolute;left:12px;bottom:10px;font-size:20px;padding:2px 10px;border-radius:4px;background:rgba(255,255,255,.85);color:var(--ink)}
+.m1{background:radial-gradient(circle at 20% 30%,#cfcac2 1.5px,transparent 2px) 0 0/9px 11px,radial-gradient(circle at 70% 60%,#bdb8b0 1px,transparent 1.5px) 0 0/7px 8px,#ece9e3}
+.m2{background:radial-gradient(circle at 30% 40%,#e2e1dd 1.5px,transparent 2px) 0 0/8px 9px,radial-gradient(circle at 60% 70%,#86847f 1px,transparent 1.5px) 0 0/6px 7px,#a9a7a2}
+.m3{background:radial-gradient(circle at 30% 40%,#6c6c6a 1.5px,transparent 2px) 0 0/8px 9px,radial-gradient(circle at 60% 70%,#2a2a2a 1px,transparent 1.5px) 0 0/6px 7px,#3e3e3d}
+.m4{background:linear-gradient(32deg,transparent 48%,#b59d6f 49%,#b59d6f 51%,transparent 52%) 0 0/70px 60px,linear-gradient(-58deg,transparent 48%,#b59d6f 49%,#b59d6f 51%,transparent 52%) 0 0/90px 70px,#dcc79f}
+.use{font-size:21px;line-height:1.6;color:var(--ink2)}
+.use div{display:grid;grid-template-columns:200px 1fr;padding:12px 0;border-bottom:1px solid #e9dfd1}
+.use b{font-family:var(--serif);color:var(--ink);font-weight:500}
+
+.out2{position:absolute;left:110px;right:110px;top:190px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.out2 .frame{height:556px}
+.out2 .frame img{object-fit:contain;background:#fff}
+.out-cap{position:absolute;left:110px;right:110px;bottom:90px;display:flex;gap:60px;align-items:center}
+.out-cap .big{font-family:var(--latin);font-size:110px;color:var(--rose);line-height:1}
+.out-cap .big small{font-size:40px;color:var(--ink2)}
+.out-cap p{font-size:24px;line-height:1.8;color:var(--ink2);max-width:1000px}
+
+.lt-img{position:absolute;left:110px;right:110px;top:170px;height:412px;border-radius:12px;overflow:hidden;background:#1d2533}
+.lt-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:left center;transition:opacity 1.2s}
+.lt-img .hol{opacity:0}
+.holiday .lt-img .hol{opacity:1}
+.lt-badge{position:absolute;left:30px;top:26px;z-index:3;padding:10px 26px;border-radius:30px;font-size:24px;letter-spacing:.2em;background:rgba(255,255,255,.92);color:var(--ink);transition:all .6s}
+.holiday .lt-badge{background:var(--rose);color:#fff}
+.lt-r{position:absolute;left:110px;right:110px;top:612px;display:flex;align-items:center;gap:40px}
+.lt-r h3{font-family:var(--serif);font-size:28px;font-weight:500;margin:0;letter-spacing:.2em;white-space:nowrap}
+.lg{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 36px}
+.lg li{display:flex;align-items:center;gap:14px;font-size:23px;padding:10px 0;transition:all .6s}
+.lg i{width:34px;height:8px;border-radius:4px;flex:none;transition:all .6s}
+.lg li.ho{opacity:.25}
+.holiday .lg li.ho{opacity:1;color:var(--rose2)}
+.holiday .lg li.ho i{box-shadow:0 0 14px currentColor}
+.lt-strip{position:absolute;left:110px;right:110px;bottom:70px;height:300px;border-radius:12px;overflow:hidden}
+.lt-strip img{width:100%;height:100%;object-fit:cover;object-position:center 60%}
+
+.int{position:absolute;left:110px;right:110px;top:180px;bottom:70px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:26px}
+.int .frame{position:relative}
+.int .note{border-radius:12px;background:var(--ink);color:#efe4d3;padding:46px 54px;display:flex;flex-direction:column;justify-content:center}
+.int .note h3{font-family:var(--serif);font-size:40px;font-weight:500;margin:0 0 24px;letter-spacing:.12em;color:#fff}
+.int .note div{font-size:23px;line-height:1.6;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}
+.int .note b{color:var(--rose2);font-weight:500;margin-right:14px}
+.int .lab{position:absolute;left:24px;top:22px;padding:8px 22px;border-radius:24px;background:rgba(255,255,255,.92);font-size:22px;letter-spacing:.14em}
+
+.cost-l{position:absolute;left:110px;top:200px;width:620px}
+.cost-l .k{font-size:24px;letter-spacing:.3em;color:#a99d8c}
+.cost-l .v{font-family:var(--latin);font-size:132px;line-height:1.05;color:#fff;font-weight:500;margin:6px 0 40px;white-space:nowrap}
+.cost-l .v small{font-size:44px;color:#bfb3a2;margin-left:10px}
+.cost-l .v.s{font-size:110px;color:var(--rose2)}
+.stack{display:flex;height:56px;border-radius:28px;overflow:hidden;margin:20px 0 16px;background:#2a2420}
+.stack .bar{height:100%}
+.stack .bar i{background:var(--c)}
+.stk-lg{display:flex;flex-direction:column;gap:10px;font-size:21px;color:#d8ccbb}
+.stk-lg div{display:flex;justify-content:space-between}
+.stk-lg i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:12px;vertical-align:-1px}
+.cost-r{position:absolute;left:840px;right:110px;top:200px}
+.cost-r h3{font-family:var(--serif);font-weight:500;font-size:30px;letter-spacing:.2em;margin:0 0 26px;color:#efe4d3}
+.cr{display:grid;grid-template-columns:200px 1fr 160px;align-items:center;gap:20px;height:62px;font-size:22px;color:#d8ccbb}
+.cr .bar{height:26px;border-radius:13px;overflow:hidden;background:#221d1a}
+.cr .bar i{background:linear-gradient(90deg,var(--brick),var(--rose2));border-radius:13px}
+.cr .n{font-family:var(--latin);font-size:28px;text-align:right;color:#fff}
+.cost-note{position:absolute;left:840px;right:110px;bottom:70px;font-size:18px;color:#8d8377;line-height:1.7}
+
+.end h2{position:absolute;left:0;right:0;top:360px;text-align:center;font-family:var(--serif);font-size:150px;font-weight:300;letter-spacing:.6em;color:#fff;margin:0;text-indent:.6em}
+.end .latin{position:absolute;left:0;right:0;top:590px;text-align:center;font-size:36px;color:var(--rose2);letter-spacing:.8em}
+.end .sig{position:absolute;left:0;right:0;bottom:120px;text-align:center;font-size:24px;letter-spacing:.4em;color:#d9ccb9}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 20px;font:14px/1 var(--sans);color:#eee;background:linear-gradient(0deg,rgba(0,0,0,.65),transparent);transition:opacity .5s}
+#hud.hide{opacity:0}
+#hud .ch{flex:1;letter-spacing:.15em;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud button{all:unset;cursor:pointer;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.12);font-size:14px;white-space:nowrap}
+#hud button:hover{background:rgba(255,255,255,.25)}
+#hud button.act{background:var(--rose)}
+#hud .num{font-family:var(--latin);font-size:18px;letter-spacing:.1em;min-width:70px;text-align:center}
+#prog{position:fixed;left:0;bottom:0;height:3px;background:var(--rose);z-index:21;transition:width .6s ease}
+#tick{position:fixed;left:0;bottom:3px;height:2px;width:0;background:rgba(255,255,255,.7);z-index:21}
+#menu{position:fixed;inset:0;z-index:30;background:rgba(12,10,9,.94);display:none;overflow:auto;padding:60px 6vw;color:#eee}
+#menu.open{display:block}
+#menu h3{font:500 22px var(--serif);letter-spacing:.3em;margin:30px 0 14px;color:var(--rose2)}
+#menu .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+#menu a{display:block;padding:12px 16px;border-radius:8px;background:rgba(255,255,255,.06);color:#eee;text-decoration:none;font-size:15px;cursor:pointer}
+#menu a:hover,#menu a.cur{background:var(--rose)}
+#menu a em{font-style:normal;opacity:.6;margin-right:10px;font-family:var(--latin)}
+#menu .x{position:fixed;right:24px;top:18px;font-size:30px;cursor:pointer}
+#menu .help{font-size:14px;opacity:.6;margin-top:6px;line-height:1.8}
+@media (prefers-reduced-motion:reduce){.on .kb,.gal img.cur{animation:none}.streaks i,.motes i{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 01 封面 -->
+<section class="slide dark cover" data-dur="9" data-ch="封面" data-title="封面">
+  <div class="bg kb" style="background-image:url(assets/img/r37.jpg);--kbd:22s"></div>
+  <div class="shade" style="background:linear-gradient(90deg,rgba(10,8,7,.9) 0%,rgba(10,8,7,.62) 45%,rgba(10,8,7,.08) 80%)"></div>
+  <svg style="position:absolute;inset:0" viewBox="0 0 1920 1080" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5">
+    <line class="draw" pathLength="1" x1="0" y1="190" x2="1920" y2="190" style="--d:.2s"/>
+    <line class="draw" pathLength="1" x1="0" y1="900" x2="1920" y2="900" style="--d:.4s"/>
+    <line class="draw" pathLength="1" x1="110" y1="0" x2="110" y2="1080" style="--d:.3s"/>
+    <line class="draw" pathLength="1" x1="1500" y1="0" x2="1500" y2="1080" style="--d:.5s"/>
+  </svg>
+  <div class="cover-txt">
+    <div class="eyebrow fx up" style="--d:.3s">义乌垂直楼项目 · 景观方案设计</div>
+    <h1 class="chars" data-d0=".6" data-st=".14">义巷·漫游集</h1>
+    <div class="latin lt fx up" style="--d:1.6s">Yixiang · Roaming Collection</div>
+    <div class="rule fx wipe" style="--d:1.9s"></div>
+    <div class="slogan fx blur" style="--d:2.3s">经纬之间，自在漫游</div>
+  </div>
+  <div class="meta fx up" style="--d:2.8s">2026.10 ｜ 杭州市建筑设计研究院股份有限公司</div>
+</section>
+
+<!-- 02 目录 -->
+<section class="slide dark" data-dur="8" data-ch="目录" data-title="目录">
+  <div class="bg kb" style="background-image:url(assets/img/r81.jpg);opacity:.16"></div>
+  <div class="toc-l">
+    <div class="big fx left" style="--d:.2s">目录</div>
+    <div class="latin fx left" style="--d:.45s">Contents</div>
+  </div>
+  <ul class="toc-list">
+    <li class="fx right" style="--d:.5s" data-goto="P1"><span class="n">PART<em>1</em></span><span class="q">我们拥有怎样的场地条件？</span></li>
+    <li class="fx right" style="--d:.65s" data-goto="P2"><span class="n">PART<em>2</em></span><span class="q">国际前沿商业空间是怎样？</span></li>
+    <li class="fx right" style="--d:.8s" data-goto="P3"><span class="n">PART<em>3</em></span><span class="q">我们需要怎样的商业景观？</span></li>
+    <li class="fx right" style="--d:.95s" data-goto="P4"><span class="n">PART<em>4</em></span><span class="q">我们如何整体化布局景观？</span></li>
+    <li class="fx right" style="--d:1.1s" data-goto="P5"><span class="n">PART<em>5</em></span><span class="q">我们如何分区化打造场景？</span></li>
+    <li class="fx right" style="--d:1.25s" data-goto="P6"><span class="n">PART<em>6</em></span><span class="q">我们如何专项化打造场景？</span></li>
+  </ul>
+</section>
+
+<!-- PART 1 -->
+<section class="slide divi" id="P1" data-dur="5" data-ch="PART 1 · 场地条件" data-title="PART 1 场地条件">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/r36.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>1</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">我们拥有怎样的场地条件？</div>
+  <div class="en latin fx up" style="--d:1.3s">Site Conditions</div>
+</section>
+
+<section class="slide" data-dur="10" data-ch="PART 1 · 场地条件" data-title="项目区位">
+  <div class="hd fx down"><b>项目区位</b><span>Project Location</span></div>
+  <div class="pg">PART 1</div>
+  <div class="loc-l">
+    <div class="stat-row">
+      <div class="stat fx up" style="--d:.3s"><div class="v"><span data-count="10">0</span><small>km</small></div><div class="k">距义乌站（直线）</div></div>
+      <div class="stat fx up" style="--d:.45s"><div class="v"><span data-count="8.5" data-dec="1">0</span><small>km</small></div><div class="k">距义乌机场</div></div>
+    </div>
+    <div class="dir fx left" style="--d:.8s"><div class="ic">西北</div><div><h4>主入口 · 形象展示面</h4><p>西北向承接主要城市人流（体育文化用地方向），宜作为项目主入口及形象展示面，强化公共性与开放性。</p></div></div>
+    <div class="dir b fx left" style="--d:1s"><div class="ic">其余</div><div><h4>社区界面 · 亲切宜人</h4><p>北侧为办公楼，其他方向为住宅区，以周边社区居民为主要服务对象，宜弱化边界感，营造亲切、宜人的社区氛围。</p></div></div>
+  </div>
+  <div class="loc-r frame fx zoom" style="--d:.2s"><img class="kb" style="--kbd:24s;--kx:-2%" src="assets/img/map.jpg" alt="项目区位图"></div>
+</section>
+
+<section class="slide" data-dur="10" data-ch="PART 1 · 场地条件" data-title="项目概况">
+  <div class="hd fx down"><b>项目概况</b><span>Project Overview</span></div>
+  <div class="pg">PART 1</div>
+  <div class="ov-grid">
+    <div class="stat fx up" style="--d:.2s"><div class="v"><span data-count="19519.18" data-dec="2">0</span><small>㎡</small></div><div class="k">用地红线面积</div></div>
+    <div class="stat fx up" style="--d:.35s"><div class="v"><span data-count="6831.2" data-dec="1">0</span><small>㎡</small></div><div class="k">建筑占地面积</div></div>
+    <div class="stat fx up" style="--d:.5s"><div class="v"><span data-count="12687.98" data-dec="2">0</span><small>㎡</small></div><div class="k">景观面积</div></div>
+    <div class="stat fx up" style="--d:.65s"><div class="v"><span data-count="20">0</span><small>%</small></div><div class="k">规划绿地率</div></div>
+  </div>
+  <div class="share fx up" style="--d:.9s">
+    <div class="lbl"><span>建筑占地 ≈ 35%</span><span>景观面积 ≈ 65%</span></div>
+    <div class="track"><div class="bar" style="width:35%"><i style="--d:1.2s"></i></div><div class="bar g" style="width:65%"><i style="--d:1.6s"></i></div></div>
+    <div class="note">近三分之二用地为景观空间 —— 这是一条以“街”为主角的商业场所。</div>
+  </div>
+  <div class="ov-r frame fx right" style="--d:.3s"><img src="assets/img/site.jpg" alt="红线范围"></div>
+  <div class="ov-cap fx up" style="--d:1.2s">用地北临江东东路、西接下王路，南侧与东侧为现状道路；场地呈东西向狭长带状，建筑沿南北两侧布置，中部形成贯通的景观内街。</div>
+</section>
+
+<section class="slide" data-dur="10" data-ch="PART 1 · 场地条件" data-title="交通与竖向分析">
+  <div class="hd fx down"><b>交通 · 竖向分析</b><span>Traffic &amp; Vertical</span></div>
+  <div class="pg">PART 1</div>
+  <div class="two">
+    <div>
+      <h3 class="fx up" style="--d:.2s">交通分析<small>Traffic</small></h3>
+      <p class="txt fx up" style="--d:.3s">场地内部实现<b class="rose">人车分流</b>，保证环境的安静及安全；非机动车位建议移至人行道。</p>
+      <div class="frame fx zoom" style="--d:.4s;height:560px"><img src="assets/img/traffic.jpg" alt="交通分析" style="object-fit:contain"></div>
+    </div>
+    <div>
+      <h3 class="fx up" style="--d:.5s">竖向分析<small>Vertical</small></h3>
+      <p class="txt fx up" style="--d:.6s">由西向东地势呈<b class="rose">升高趋势</b>，场地内部地势基本平稳。</p>
+      <div class="frame fx zoom" style="--d:.7s;height:300px"><img src="assets/img/vertical.jpg" alt="竖向分析" style="object-fit:contain"></div>
+      <svg class="fx up" style="--d:.9s;margin-top:26px" width="100%" height="230" viewBox="0 0 800 230">
+        <text x="0" y="22" font-size="18" fill="#958b80">江东东路沿线市政标高（西 → 东）m</text>
+        <line x1="40" y1="200" x2="780" y2="200" stroke="#d9cfc1"/>
+        <path class="draw" pathLength="1" style="--d:1.2s;--t:2.2s" d="M60,180 L200,166 L340,139 L480,116 L620,79 L760,49" fill="none" stroke="#d43a7f" stroke-width="4" stroke-linecap="round"/>
+        <path class="fx" style="--d:2.4s" d="M60,180 L200,166 L340,139 L480,116 L620,79 L760,49 L760,200 L60,200Z" fill="rgba(212,58,127,.08)"/>
+        <g font-family="Cormorant Garamond,Georgia,serif" font-size="24" fill="#1d1a17" text-anchor="middle">
+          <circle class="pop" style="--d:1.3s" cx="60" cy="180" r="7" fill="#d43a7f"/><text class="fx" style="--d:1.4s" x="60" y="164">63.89</text>
+          <circle class="pop" style="--d:1.6s" cx="200" cy="166" r="7" fill="#d43a7f"/><text class="fx" style="--d:1.7s" x="200" y="150">64.00</text>
+          <circle class="pop" style="--d:1.9s" cx="340" cy="139" r="7" fill="#d43a7f"/><text class="fx" style="--d:2s" x="340" y="123">64.21</text>
+          <circle class="pop" style="--d:2.2s" cx="480" cy="116" r="7" fill="#d43a7f"/><text class="fx" style="--d:2.3s" x="480" y="100">64.39</text>
+          <circle class="pop" style="--d:2.5s" cx="620" cy="79" r="7" fill="#d43a7f"/><text class="fx" style="--d:2.6s" x="620" y="63">64.68</text>
+          <circle class="pop" style="--d:2.8s" cx="760" cy="49" r="7" fill="#d43a7f"/><text class="fx" style="--d:2.9s" x="760" y="33">64.91</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-dur="10" data-ch="PART 1 · 场地条件" data-title="建筑业态与风格">
+  <div class="hd fx down"><b>建筑业态 · 建筑风格</b><span>Building Type &amp; Style</span></div>
+  <div class="pg">PART 1</div>
+  <div class="two">
+    <div>
+      <h3 class="fx up" style="--d:.2s">建筑业态<small>Building Type</small></h3>
+      <div class="frame fx zoom" style="--d:.3s;height:450px;margin:20px 0 26px"><img src="assets/img/buildtype.jpg" alt="建筑业态" style="object-fit:contain"></div>
+      <div class="chips">
+        <span class="chip fx up" style="--d:.7s"><i style="background:#c9a06c"></i>垂直商住</span>
+        <span class="chip fx up" style="--d:.8s"><i style="background:#6dbb9b"></i>酒店商务</span>
+        <span class="chip fx up" style="--d:.9s"><i style="background:#8f9bd6"></i>一层开闭所</span>
+        <span class="chip fx up" style="--d:1s"><i style="background:#c779b0"></i>一层消控室</span>
+      </div>
+      <p class="txt fx up" style="--d:1.1s;margin-top:26px">业态复合：商业为主脉，酒店、办公、居住为配套辅脉。</p>
+    </div>
+    <div>
+      <h3 class="fx up" style="--d:.4s">建筑风格<small>Architectural Style</small></h3>
+      <div class="kv fx up" style="--d:.5s;margin-top:20px"><b>形式</b><span>现代、简洁、轻奢；曲面圆弧，注重节奏和韵律变化，强调组合排列秩序感</span></div>
+      <div class="kv fx up" style="--d:.65s;margin-top:18px"><b>色彩</b><div class="sw" style="margin:0">
+        <div style="background:#efe7da">米白</div><div style="background:#9b4a35;color:#fff">棕红</div><div style="background:#cdb38a">香槟</div></div></div>
+      <div class="kv fx up" style="--d:.8s;margin-top:18px"><b>材料</b><span>石材（仿石）· 玻璃 · 金属</span></div>
+      <div class="frame fx rise" style="--d:1s;height:420px;margin-top:30px"><img src="assets/img/style.jpg" alt="建筑风格" style="object-position:center 100%"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PART 2 -->
+<section class="slide divi" id="P2" data-dur="5" data-ch="PART 2 · 案例研究" data-title="PART 2 案例研究">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/case2.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>2</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">国际前沿商业空间是怎样？</div>
+  <div class="en latin fx up" style="--d:1.3s">Case Studies</div>
+</section>
+
+<section class="slide" data-dur="12" data-ch="PART 2 · 案例研究" data-title="案例分析">
+  <div class="hd fx down"><b>案例分析</b><span>Case Studies</span></div>
+  <div class="pg">PART 2</div>
+  <div class="cases">
+    <div class="case fx up" style="--d:.2s"><div class="im"><img src="assets/img/case1.jpg" alt=""></div><div class="bd">
+      <div class="nm">华润 · 亚奥万象天地</div><div class="en">CHINA RESOURCES MIXC</div>
+      <div class="jj">借鉴点</div><div class="pt">可停留能社交的城市空间</div>
+      <div class="tg"><span>花园的街道环境</span><span>充足的城市家具</span><span>友好的慢行交通</span></div>
+      <div class="mt">浙江杭州 · 商业综合体<br>7.8 万㎡ · 2007</div></div></div>
+    <div class="case fx up" style="--d:.4s"><div class="im"><img src="assets/img/case2.jpg" alt=""></div><div class="bd">
+      <div class="nm">华润 · 义乌天地</div><div class="en">CHINA RESOURCES YIWU</div>
+      <div class="jj">借鉴点</div><div class="pt">有留白会生长的弹性空间</div>
+      <div class="tg"><span>大尺度的公共留白</span><span>可外摆的弹性界面</span><span>可复合的活动场地</span></div>
+      <div class="mt">浙江义乌 · 商业综合体<br>59,000 ㎡ · 2024</div></div></div>
+    <div class="case fx up" style="--d:.6s"><div class="im"><img src="assets/img/case3.jpg" alt=""></div><div class="bd">
+      <div class="nm">万科 · 玉鸟集</div><div class="en">VANKE YUNIAO JI</div>
+      <div class="jj">借鉴点</div><div class="pt">既松弛又自在的商业氛围</div>
+      <div class="tg"><span>生态型的植物群落</span><span>参与性的叙事空间</span><span>多样化的活力场景</span></div>
+      <div class="mt">浙江杭州 · 商业、办公<br>235,000 ㎡ · 2007</div></div></div>
+    <div class="case fx up" style="--d:.8s"><div class="im"><img src="assets/img/case4.jpg" alt=""></div><div class="bd">
+      <div class="nm">杭州 · 天目里</div><div class="en">TIANMULI, HANGZHOU</div>
+      <div class="jj">借鉴点</div><div class="pt">具魅力显先锋的艺术格调</div>
+      <div class="tg"><span>特色化的设计语言</span><span>精致的小品元素</span><span>文艺的集市运营</span></div>
+      <div class="mt">浙江杭州 · 商业、办公<br>230,000 ㎡ · 2020</div></div></div>
+  </div>
+</section>
+
+<section class="slide dark" data-dur="9" data-ch="PART 2 · 案例研究" data-title="案例总结">
+  <div class="bg kb" style="background-image:url(assets/img/case3.jpg);opacity:.18"></div>
+  <div class="hd fx down"><b>案例总结</b><span>Summary</span></div>
+  <div class="pg">PART 2</div>
+  <div class="sum-l">
+    <div class="t fx up" style="--d:.2s">前沿商业景观<br>的<span class="rose" style="color:var(--rose2)">共性</span></div>
+    <div class="latin fx up" style="--d:.5s">The commonalities of<br>international commercial landscapes</div>
+  </div>
+  <div class="sum-list">
+    <div class="it fx right" style="--d:.6s"><div class="n">01</div><div><div class="c">可停留能社交的城市空间</div><div class="e">Urban spaces that encourage lingering and social interaction</div></div></div>
+    <div class="it fx right" style="--d:.85s"><div class="n">02</div><div><div class="c">有留白会生长的弹性空间</div><div class="e">Flexible space that allows for growth through "white space"</div></div></div>
+    <div class="it fx right" style="--d:1.1s"><div class="n">03</div><div><div class="c">既松弛又自在的商业氛围</div><div class="e">A business atmosphere that is both relaxed and at ease</div></div></div>
+    <div class="it fx right" style="--d:1.35s"><div class="n">04</div><div><div class="c">具魅力显先锋的艺术格调</div><div class="e">An artistic style that is both captivating and avant-garde</div></div></div>
+  </div>
+</section>
+
+<!-- PART 3 -->
+<section class="slide divi" id="P3" data-dur="5" data-ch="PART 3 · 设计定位" data-title="PART 3 设计定位">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/r81.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>3</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">我们需要怎样的商业景观？</div>
+  <div class="en latin fx up" style="--d:1.3s">Positioning &amp; Strategy</div>
+</section>
+
+<section class="slide dark" data-dur="9" data-ch="PART 3 · 设计定位" data-title="设计定位">
+  <div class="bg kb" style="background-image:url(assets/img/r53.jpg);--kbd:20s"></div>
+  <div class="shade" style="background:rgba(12,9,8,.66)"></div>
+  <div class="hd fx down"><b>设计定位</b><span>Design Positioning</span></div>
+  <div class="pos-c">
+    <div class="out fx blur" style="--d:.2s">EXQUISITE RELAXATION</div>
+    <h2 class="fx zoom" style="--d:.9s">精致烟火气<i>·</i>松弛灵感场</h2>
+    <div class="sub fx up" style="--d:1.6s">以商业活力为基调，酒店、办公、居住为配套支撑的复合景观空间</div>
+    <div class="sub2 fx up" style="--d:1.9s">A mixed-use landscape anchored by commercial vitality, supported by hotel, office and residential</div>
+  </div>
+</section>
+
+<section class="slide" data-dur="12" data-ch="PART 3 · 设计定位" data-title="布局·功能·风格定位">
+  <div class="hd fx down"><b>三重定位</b><span>Layout · Function · Style</span></div>
+  <div class="pg">PART 3</div>
+  <div class="cols3">
+    <div class="pcol fx up" style="--d:.2s"><div class="im"><img class="kb" src="assets/img/r60.jpg" alt=""></div><div class="bd">
+      <div class="no">01 · 布局定位</div><h3>外引内营，双脉共织</h3>
+      <div class="row"><b><span class="tag">对外</span>城市引流展廊</b><span>迎宾入市，展示义乌活力</span></div>
+      <div class="row"><b><span class="tag g">对内</span>商业线性客厅</b><span>留客经营，承载精致日常</span></div>
+    </div></div>
+    <div class="pcol fx up" style="--d:.45s"><div class="im"><img class="kb" src="assets/img/r77.jpg" alt=""></div><div class="bd">
+      <div class="no">02 · 功能定位</div><h3>商主辅居，一主三辅</h3>
+      <div class="row"><b><span class="tag">主脉</span>商业 · 城市活力引擎</b><span>聚人留客，引领轻奢风尚</span></div>
+      <div class="row"><b><span class="tag g">辅脉</span>办公 · 酒店 · 居住</b><span>各安其位，支撑复合生态</span></div>
+    </div></div>
+    <div class="pcol fx up" style="--d:.7s"><div class="im"><img class="kb" src="assets/img/r54.jpg" alt=""></div><div class="bd">
+      <div class="no">03 · 风格定位</div><h3>自在松弛，精致轻奢</h3>
+      <div class="row"><b><span class="tag">质感</span>精致轻奢</b><span>重细节，以材质、灯光与工艺传递高级感</span></div>
+      <div class="row"><b><span class="tag g">氛围</span>自在松弛</b><span>去压力化，营造慵懒随性的停留氛围</span></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="slide cream" data-dur="14" data-ch="PART 3 · 设计策略" data-title="设计策略">
+  <div class="hd fx down"><b>设计策略</b><span>Design Strategies</span></div>
+  <div class="pg">PART 3</div>
+  <div class="strat">
+    <div class="st fx up" style="--d:.2s"><div class="no">01</div><h3>留白优于填铺</h3><div class="en">NEGATIVE SPACE</div>
+      <p>商业空间不宜过度铺满，适当预留弹性空间，为外摆经营、路演活动、市集运营等多元场景留出可能，赋予空间持续生长的能力。</p></div>
+    <div class="st fx up" style="--d:.35s"><div class="no">02</div><h3>外摆优于绿地</h3><div class="en">OUTDOOR SEATING</div>
+      <p>在确保绿地率的前提下，优先沿商铺界面预留充足的外摆空间，以商业活力带动人气聚集，实现景观价值与商业价值的双赢。</p></div>
+    <div class="st fx up" style="--d:.5s"><div class="no">03</div><h3>停留优于通过</h3><div class="en">STOPOVER</div>
+      <p>带状空间不应仅作为通行的过道，而应通过座椅、节点、景观小品营造丰富的停留空间，让人愿意驻足、小坐、休憩、沉浸。</p></div>
+    <div class="st fx up" style="--d:.65s"><div class="no">04</div><h3>横向优于纵向</h3><div class="en">HORIZONTAL</div>
+      <p>纵向空间天然呈线性，易流于单调。强化横向与绿地的犬牙交错关系，将人流自然引入中央绿地，拓展体验的纵深与广度。</p></div>
+    <div class="st fx up" style="--d:.8s"><div class="no">05</div><h3>界面疏朗通透</h3><div class="en">TRANSPARENT</div>
+      <p>沿街商业界面少种植高大乔木，避免树冠遮挡商铺立面与橱窗展示面，确保商户的视觉通透性和商业昭示性。</p></div>
+    <div class="st fx up" style="--d:.95s"><div class="no">06</div><h3>柔性空间界定</h3><div class="en">SEGMENTATION</div>
+      <p>商户之间不设硬质隔断，采用花箱、矮墙等软性手段界定，既保持经营独立性，又维持街区整体的开放感和连续性。</p></div>
+  </div>
+</section>
+
+<section class="slide dark fs" data-dur="13" data-ch="PART 3 · 设计主题" data-title="设计主题 FAST / SLOW">
+  <div class="bg kb" style="background-image:url(assets/img/r73.jpg);--kbd:16s;opacity:.0;transition:opacity 2s 4s" id="fsbg"></div>
+  <div class="streaks" id="streaks"></div>
+  <div class="fastt"><div class="w">FAST</div><p>义乌是一座“快”的城市 —— 全球商贸、物流、人流日夜不息。</p></div>
+  <div class="slow">
+    <div class="motes fx" style="--d:4.2s" id="motes"></div>
+    <div class="slowt"><div class="w fx blur" style="--d:4.6s">SLOW</div><p class="fx up" style="--d:5.4s">这条街要提供一种“慢”的可能：<br>漫游、停留、自在、松弛。</p></div>
+    <div class="theme">
+      <h2 class="chars" data-d0="6.6" data-st=".16">义巷·漫游集</h2>
+      <div class="latin fx up" style="--d:7.8s">Yixiang · Roaming Collection</div>
+      <div class="s fx blur" style="--d:8.4s">经纬之间，自在漫游</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dark" data-dur="11" data-ch="PART 3 · 设计语言" data-title="设计语言">
+  <div class="hd fx down"><b>设计语言</b><span>Design Language</span></div>
+  <div class="pg">PART 3</div>
+  <svg class="lang" viewBox="0 0 1700 560" fill="none">
+    <!-- grid -->
+    <g stroke="#d43a7f" stroke-width="5" stroke-linecap="round">
+      <line class="draw" pathLength="1" x1="60" y1="140" x2="380" y2="140" style="--d:.3s;--t:1s"/>
+      <line class="draw" pathLength="1" x1="40" y1="230" x2="400" y2="230" style="--d:.45s;--t:1s"/>
+      <line class="draw" pathLength="1" x1="80" y1="320" x2="360" y2="320" style="--d:.6s;--t:1s"/>
+      <line class="draw" pathLength="1" x1="120" y1="90" x2="120" y2="400" style="--d:.5s;--t:1s"/>
+      <line class="draw" pathLength="1" x1="220" y1="70" x2="220" y2="420" style="--d:.65s;--t:1s"/>
+      <line class="draw" pathLength="1" x1="310" y1="100" x2="310" y2="380" style="--d:.8s;--t:1s"/>
+    </g>
+    <text x="220" y="490" text-anchor="middle" fill="#efe4d3" font-size="32" font-family="Noto Serif SC,serif" class="fx" style="--d:1s">经纬之间 · 横竖空间骨架</text>
+    <text x="490" y="250" text-anchor="middle" fill="#fff" font-size="80" font-weight="300" class="fx" style="--d:1.4s">+</text>
+    <!-- nodes -->
+    <path class="draw" pathLength="1" style="--d:1.6s;--t:2.4s" d="M590,330 C650,200 720,360 780,240 S900,120 940,250" stroke="#a7d68a" stroke-width="3" stroke-dasharray="1" fill="none"/>
+    <g fill="#5d8a48">
+      <circle class="pop" style="--d:1.8s" cx="600" cy="300" r="34"/>
+      <circle class="pop" style="--d:2.1s" cx="700" cy="250" r="22" fill="#8dbb6e"/>
+      <circle class="pop" style="--d:2.4s" cx="780" cy="240" r="40"/>
+      <circle class="pop" style="--d:2.7s" cx="870" cy="170" r="26" fill="#8dbb6e"/>
+      <circle class="pop" style="--d:3s" cx="935" cy="260" r="30"/>
+    </g>
+    <text x="770" y="490" text-anchor="middle" fill="#efe4d3" font-size="32" font-family="Noto Serif SC,serif" class="fx" style="--d:2.2s">自在漫游 · 空间节点体验</text>
+    <text x="1060" y="250" text-anchor="middle" fill="#fff" font-size="80" font-weight="300" class="fx" style="--d:3.2s">=</text>
+    <!-- result strip -->
+    <g class="fx" style="--d:3.4s">
+      <rect x="1130" y="150" width="540" height="200" rx="100" fill="#1f1a17" stroke="#5e544b" stroke-width="2"/>
+      <g stroke="#d43a7f" stroke-width="3">
+        <line class="draw" pathLength="1" x1="1170" y1="220" x2="1640" y2="220" style="--d:3.6s"/>
+        <line class="draw" pathLength="1" x1="1170" y1="280" x2="1640" y2="280" style="--d:3.7s"/>
+        <line class="draw" pathLength="1" x1="1240" y1="170" x2="1240" y2="330" style="--d:3.8s"/>
+        <line class="draw" pathLength="1" x1="1360" y1="170" x2="1360" y2="330" style="--d:3.9s"/>
+        <line class="draw" pathLength="1" x1="1460" y1="170" x2="1460" y2="330" style="--d:4s"/>
+        <line class="draw" pathLength="1" x1="1570" y1="170" x2="1570" y2="330" style="--d:4.1s"/>
+      </g>
+      <g fill="#5d8a48"><circle class="pop" style="--d:4.4s" cx="1300" cy="250" r="22"/><circle class="pop" style="--d:4.6s" cx="1410" cy="250" r="26"/><circle class="pop" style="--d:4.8s" cx="1515" cy="250" r="20"/><circle class="pop" style="--d:5s" cx="1610" cy="250" r="16"/></g>
+    </g>
+    <text x="1400" y="490" text-anchor="middle" fill="#f28bb6" font-size="36" font-family="Noto Serif SC,serif" class="fx" style="--d:4.6s">方案语言</text>
+  </svg>
+  <div class="lang-txt">
+    <div class="fx up" style="--d:1.2s"><h4>经纬之间</h4><p>是空间秩序。横竖线条构成骨架，秩序给人安全感，变化给人探索欲。</p></div>
+    <div class="fx up" style="--d:2.4s"><h4>自在漫游</h4><p>是空间体验。不被催促，不被引导，可以什么都不做，只是待着。</p></div>
+  </div>
+</section>
+
+<!-- PART 4 -->
+<section class="slide divi" id="P4" data-dur="5" data-ch="PART 4 · 整体布局" data-title="PART 4 整体布局">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/r63.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>4</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">我们如何整体化布局景观？</div>
+  <div class="en latin fx up" style="--d:1.3s">Master Plan</div>
+</section>
+
+<section class="slide" data-dur="16" data-ch="PART 4 · 整体布局" data-title="总平面图" id="mpSlide">
+  <div class="hd fx down"><b>总平面图</b><span>Master Plan</span></div>
+  <div class="pg">PART 4</div>
+  <div class="mp fx wipe" style="--d:.1s" id="mp"><img src="assets/img/master.jpg" alt="总平面图"></div>
+  <ul class="legend" id="legend"></ul>
+</section>
+
+<section class="slide" data-dur="11" data-ch="PART 4 · 整体布局" data-title="断面与交通组织">
+  <div class="hd fx down"><b>断面分析</b><span>Street Section</span></div>
+  <div class="pg">PART 4</div>
+  <div class="sec-img frame fx zoom" style="--d:.2s"><img src="assets/img/section.jpg" alt="断面分析" style="object-fit:contain"></div>
+  <div class="sec-r">
+    <h3 class="fx up" style="--d:.4s">本方案 · 横向五段式</h3>
+    <div class="strip">
+      <div class="bar" style="width:20%"><i style="--d:.6s;background:#c9a76b;display:grid;place-items:center">外摆</i></div>
+      <div class="bar" style="width:20%"><i style="--d:.8s;background:#9a9188;display:grid;place-items:center">通道</i></div>
+      <div class="bar" style="width:20%"><i style="--d:1s;background:#5d8a48;display:grid;place-items:center">绿化</i></div>
+      <div class="bar" style="width:20%"><i style="--d:1.2s;background:#9a9188;display:grid;place-items:center">通道</i></div>
+      <div class="bar" style="width:20%"><i style="--d:1.4s;background:#c9a76b;display:grid;place-items:center">外摆</i></div>
+    </div>
+    <ul class="reasons">
+      <li class="fx right" style="--d:1.6s">后期绿地改造工程量大</li>
+      <li class="fx right" style="--d:1.8s">底商规模有限，瞬时人流不高</li>
+      <li class="fx right" style="--d:2s">业态复合，包含商业、酒店、办公、居住</li>
+      <li class="fx right" style="--d:2.2s">中部设置绿芯景观，丰富空间层次</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" data-dur="13" data-ch="PART 4 · 整体布局" data-title="功能结构">
+  <div class="hd fx down"><b>功能结构</b><span>Functional Structure</span></div>
+  <div class="pg">PART 4</div>
+  <div class="fn-title fx up" style="--d:.2s;top:160px"><b>一轴两带三核，多点渗透</b>以中央景观轴为核心骨架，串联南北双商业脉络，依托三大功能核心形成全域联动。</div>
+  <svg class="fn-svg" viewBox="0 0 1700 600" fill="none" font-family="Noto Serif SC,serif">
+    <rect class="draw" pathLength="1" style="--d:.2s;--t:2s" x="10" y="60" width="1680" height="480" rx="240" stroke="#d6ccbd" stroke-width="2"/>
+    <!-- bands -->
+    <path class="draw" pathLength="1" style="--d:.8s" d="M180,120 H1560" stroke="#5aa58c" stroke-width="10" stroke-linecap="round"/>
+    <path class="draw" pathLength="1" style="--d:1s" d="M180,480 H1560" stroke="#5aa58c" stroke-width="10" stroke-linecap="round"/>
+    <text class="fx" style="--d:1.4s" x="180" y="100" fill="#3e8a70" font-size="26">北商业带</text>
+    <text class="fx" style="--d:1.5s" x="180" y="525" fill="#3e8a70" font-size="26">南商业带</text>
+    <!-- axis -->
+    <path class="draw" pathLength="1" style="--d:1.3s;--t:2.2s" d="M40,300 H1660" stroke="#d43a7f" stroke-width="14" stroke-linecap="round"/>
+    <path class="fx" style="--d:3.2s" d="M1640,280 L1675,300 L1640,320Z M60,280 L25,300 L60,320Z" fill="#d43a7f"/>
+    <!-- penetration arrows -->
+    <g stroke="#5aa58c" stroke-width="3" class="fx" style="--d:3.2s">
+      <path class="flow" d="M490,130 V230 M1240,130 V230 M760,470 V370 M1400,470 V370 M560,470 V370 M1120,130 V230"/>
+    </g>
+    <!-- zones -->
+    <g stroke-dasharray="10 8" stroke-width="2.5">
+      <rect class="fx" style="--d:1.8s" x="70" y="170" width="240" height="260" rx="30" stroke="#8a7f74"/>
+      <rect class="fx" style="--d:2s" x="340" y="170" width="640" height="260" rx="30" stroke="#c9a76b"/>
+      <rect class="fx" style="--d:2.2s" x="1010" y="170" width="640" height="260" rx="30" stroke="#d43a7f"/>
+    </g>
+    <g font-size="22" fill="#5d554c" text-anchor="middle">
+      <text class="fx" style="--d:2s" x="190" y="200">商务酒店区</text>
+      <text class="fx" style="--d:2.2s" x="660" y="200">西片区</text>
+      <text class="fx" style="--d:2.4s" x="1330" y="200">东片区</text>
+    </g>
+    <g text-anchor="middle">
+      <g class="pop" style="--d:2.3s"><circle cx="190" cy="310" r="64" fill="#3b342e"/><text x="190" y="306" fill="#fff" font-size="24">商务</text><text x="190" y="336" fill="#fff" font-size="24">酒店</text></g>
+    </g>
+    <g text-anchor="middle" font-size="24" id="fnNodes"></g>
+  </svg>
+  <div class="fn-foot">
+    <span class="fx up" style="--d:3.4s"><b>一轴</b>中央景观轴</span>
+    <span class="fx up" style="--d:3.6s"><b>两带</b>南商业带 · 北商业带</span>
+    <span class="fx up" style="--d:3.8s"><b>三核</b>西片区 · 东片区 · 商务酒店区</span>
+  </div>
+</section>
+
+<!-- PART 5 -->
+<section class="slide divi" id="P5" data-dur="5" data-ch="PART 5 · 分区场景" data-title="PART 5 分区场景">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/r44.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>5</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">我们如何分区化打造场景？</div>
+  <div class="en latin fx up" style="--d:1.3s">Zones &amp; Scenes</div>
+</section>
+
+<section class="slide dark district" data-dist="0" data-dur="8" data-ch="PART 5 · 西片区" data-title="西片区"></section>
+<section class="slide zone" data-z="0" data-ch="PART 5 · 西片区"></section>
+<section class="slide zone" data-z="1" data-ch="PART 5 · 西片区"></section>
+<section class="slide zone" data-z="2" data-ch="PART 5 · 西片区"></section>
+<section class="slide zone" data-z="3" data-ch="PART 5 · 西片区"></section>
+<section class="slide dark district" data-dist="1" data-dur="8" data-ch="PART 5 · 东片区" data-title="东片区"></section>
+<section class="slide zone" data-z="4" data-ch="PART 5 · 东片区"></section>
+<section class="slide zone" data-z="5" data-ch="PART 5 · 东片区"></section>
+<section class="slide zone" data-z="6" data-ch="PART 5 · 东片区"></section>
+<section class="slide zone" data-z="7" data-ch="PART 5 · 东片区"></section>
+<section class="slide zone" data-z="8" data-ch="PART 5 · 商务酒店区"></section>
+<section class="slide zone" data-z="9" data-ch="PART 5 · 沿街商业外摆"></section>
+
+<!-- PART 6 -->
+<section class="slide divi" id="P6" data-dur="5" data-ch="PART 6 · 专项设计" data-title="PART 6 专项设计">
+  <div class="pic fx iris"><div class="bg kb" style="background-image:url(assets/img/r60.jpg)"></div></div>
+  <div class="arch fx right" style="--d:.2s"></div>
+  <div class="part fx up" style="--d:.6s">PART<em>6</em></div>
+  <div class="ln fx wipe" style="--d:1s"></div>
+  <div class="q fx up" style="--d:1.1s">我们如何专项化打造场景？</div>
+  <div class="en latin fx up" style="--d:1.3s">Special Designs</div>
+</section>
+
+<section class="slide" data-dur="11" data-ch="PART 6 · 植物设计" data-title="植物设计理念">
+  <div class="hd fx down"><b>植物设计理念</b><span>Planting Concept</span></div>
+  <div class="pc-l">
+    <h2 class="fx up" style="--d:.2s">松弛时尚<i> · </i>活力商街</h2>
+    <div class="latin fx up" style="--d:.4s">Relaxed Style · Vibrant Commercial Street</div>
+    <div class="lead fx up" style="--d:.6s">打破传统商业绿化的边界，以更软质的植物品种选择，构建一个充满生命力与打卡属性的年轻社交目的地。</div>
+    <ul>
+      <li class="fx left" style="--d:.9s">以<b>榉树、娜塔栎</b>等乔木勾勒错落的天际线，以<b>紫薇</b>等开花树木铺就亮丽底色。</li>
+      <li class="fx left" style="--d:1.1s">底层以常绿观叶植物为主、多年生花卉为辅，打造长效花境；蓝绿黄叶片交织白、蓝紫花卉，以清新明快的色彩点燃年轻活力。</li>
+      <li class="fx left" style="--d:1.3s">植物与红砖拱廊、艺术装置及外摆空间无界融合，将自然绿意转化为商业引力。</li>
+    </ul>
+  </div>
+  <div class="pc-r fx iris" style="--d:.1s"><div class="bg kb" style="background-image:url(assets/img/r54.jpg)"></div></div>
+</section>
+
+<section class="slide dark" data-dur="10" data-ch="PART 6 · 植物设计" data-title="植物设计特色">
+  <div class="hd fx down"><b>植物设计特色</b><span>Planting Features</span></div>
+  <div class="feat">
+    <div class="fc fx up" style="--d:.2s"><img class="kb" src="assets/img/pf1.jpg" alt=""><div class="tx"><div class="latin">LUCID</div><h3>空间通透，乔木点缀</h3><p>疏朗点植乔木，搭配通透低矮地被，不做过多组团。视线穿透外摆区，无缝衔接商业界面，促进消费停留。</p></div></div>
+    <div class="fc fx up" style="--d:.45s"><img class="kb" src="assets/img/pf2.jpg" alt=""><div class="tx"><div class="latin">FLOWER</div><h3>长效花境，生态常绿</h3><p>下层以大叶黄杨球、海芋等常绿植物点植，结合四季常绿的花境品种，构建稳定低维群落，免去频繁更换的烦恼。</p></div></div>
+    <div class="fc fx up" style="--d:.7s"><img class="kb" src="assets/img/pf3.jpg" alt=""><div class="tx"><div class="latin">SEASON</div><h3>季相分明，品种简约</h3><p>只选用四五种骨干树，以娜塔栎、紫薇等色叶或开花植物突出季相变化；地被以常绿观叶搭配蓝紫色系花卉，营造活泼的打卡氛围。</p></div></div>
+  </div>
+</section>
+
+<section class="slide" data-dur="11" data-ch="PART 6 · 植物设计" data-title="整体植物配置">
+  <div class="hd fx down"><b>整体植物配置</b><span>Plant Palette</span></div>
+  <div class="pw" id="plantWall"></div>
+</section>
+
+<section class="slide cream" data-dur="14" data-ch="PART 6 · 植物设计" data-title="分区植物设计 · 八境">
+  <div class="hd fx down"><b>分区植物设计 · 八境</b><span>Eight Planting Scenes</span></div>
+  <div class="eight" id="eight"></div>
+</section>
+
+<section class="slide" data-dur="11" data-ch="PART 6 · 铺装设计" data-title="铺装设计">
+  <div class="hd fx down"><b>铺装设计</b><span>Paving Design</span></div>
+  <div class="pv frame fx zoom" style="--d:.2s"><img src="assets/img/paving.jpg" alt="铺装设计" style="object-fit:contain"></div>
+  <div class="pv-r">
+    <h3 class="fx up" style="--d:.4s">材料小样</h3>
+    <div class="mats">
+      <div class="mat m1 fx zoom" style="--d:.5s"><span>浪花白</span></div>
+      <div class="mat m2 fx zoom" style="--d:.65s"><span>夜里雪</span></div>
+      <div class="mat m3 fx zoom" style="--d:.8s"><span>福鼎黑</span></div>
+      <div class="mat m4 fx zoom" style="--d:.95s"><span>沉香米黄</span></div>
+    </div>
+    <div class="use">
+      <div class="fx right" style="--d:1.1s"><b>中心广场</b><span>浪花白 + 夜里雪 / 夜里雪 + 福鼎黑</span></div>
+      <div class="fx right" style="--d:1.25s"><b>内街漫步通道</b><span>夜里雪 + 福鼎黑</span></div>
+      <div class="fx right" style="--d:1.4s"><b>沿街商业界面</b><span>浪花白 + 夜里雪 + 福鼎黑</span></div>
+      <div class="fx right" style="--d:1.55s"><b>入口引导性铺装</b><span>夜里雪 + 福鼎黑</span></div>
+      <div class="fx right" style="--d:1.7s"><b>休闲场地</b><span>夜里雪 + 福鼎黑 / 沉香米黄整石自然面碎拼 / 夜里雪</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-dur="10" data-ch="PART 6 · 外摆分析" data-title="外摆分析">
+  <div class="hd fx down"><b>外摆分析</b><span>Outdoor Seating</span></div>
+  <div class="out2">
+    <div class="frame fx left" style="--d:.2s"><img src="assets/img/out1.jpg" alt="外摆分析一"></div>
+    <div class="frame fx right" style="--d:.4s"><img src="assets/img/out2.jpg" alt="外摆分析二"></div>
+  </div>
+  <div class="out-cap">
+    <div class="big fx up" style="--d:.8s"><span data-count="14">0</span>–<span data-count="98">0</span><small> ㎡</small></div>
+    <p class="fx up" style="--d:1s">沿南北商业界面逐铺预留外摆区，单块面积约 14–98 ㎡ 不等；配合特色外摆铺装与可移动花箱，以“外摆优于绿地”的策略让商业活力外溢到街道。</p>
+  </div>
+</section>
+
+<section class="slide dark" data-dur="12" data-ch="PART 6 · 照明设计" data-title="照明设计" id="lightSlide">
+  <div class="hd fx down"><b>照明设计</b><span>Lighting Design</span></div>
+  <div class="lt-img fx zoom" style="--d:.2s">
+    <img src="assets/img/light1.jpg" alt="平日模式">
+    <img class="hol" src="assets/img/light2.jpg" alt="节日模式">
+    <div class="lt-badge" id="ltBadge">平日模式 · STANDARD</div>
+  </div>
+  <div class="lt-r">
+    <h3 class="fx up" style="--d:.4s">灯具类型</h3>
+    <ul class="lg">
+      <li class="fx right" style="--d:.5s"><i style="background:#f0883e"></i>庭院灯</li>
+      <li class="fx right" style="--d:.6s"><i style="background:#c7e34a"></i>草坪灯</li>
+      <li class="fx right" style="--d:.7s"><i style="background:#e8d44d"></i>灯带</li>
+      <li class="fx right" style="--d:.8s"><i style="background:#3fa1e6"></i>水景灯带</li>
+      <li class="fx right ho" style="--d:.9s"><i style="background:#2fd0ff"></i>涌泉灯 <small style="opacity:.6">（节日）</small></li>
+      <li class="fx right ho" style="--d:1s"><i style="background:#d043c8"></i>氛围灯带 <small style="opacity:.6">（节日）</small></li>
+    </ul>
+  </div>
+  <div class="lt-strip fx rise" style="--d:.8s"><img src="assets/img/lightref.jpg" alt="灯光意向"></div>
+</section>
+
+<section class="slide" data-dur="9" data-ch="PART 6 · 意向" data-title="花箱外摆与艺术装置意向">
+  <div class="hd fx down"><b>花箱外摆 · 艺术装置意向</b><span>Intentions</span></div>
+  <div class="int">
+    <div class="frame fx left" style="--d:.2s"><img class="kb" src="assets/img/flowerbox.jpg" alt=""><span class="lab">花箱外摆意向</span></div>
+    <div class="frame fx right" style="--d:.4s"><img class="kb" src="assets/img/art1.jpg" alt=""><span class="lab">艺术装置意向 · 一</span></div>
+    <div class="frame fx left" style="--d:.6s"><img class="kb" src="assets/img/art2.jpg" alt=""><span class="lab">艺术装置意向 · 二</span></div>
+    <div class="note fx right" style="--d:.8s"><h3>让花箱与艺术成为街道的“家具”</h3>
+      <div><b>柔性界定</b>可移动花箱、矮墙代替硬质隔断</div>
+      <div><b>街道家具</b>花箱、标识牌、露营车、移动坐凳</div>
+      <div><b>艺术地标</b>空中雕塑 · 入口雕塑 × 4 · 南侧精神堡垒</div></div>
+  </div>
+</section>
+
+<section class="slide dark" data-dur="13" data-ch="PART 6 · 造价估算" data-title="造价估算">
+  <div class="hd fx down"><b>造价估算</b><span>Cost Estimate</span></div>
+  <div class="cost-l">
+    <div class="k fx up" style="--d:.2s">总计（元）</div>
+    <div class="v fx up" style="--d:.3s"><span data-count="11259981">0</span></div>
+    <div class="k fx up" style="--d:.5s">景观单价</div>
+    <div class="v s fx up" style="--d:.6s"><span data-count="887">0</span><small>元/㎡</small></div>
+    <div class="stack fx up" style="--d:.9s">
+      <div class="bar" style="width:82.4%;--c:#a64a33"><i style="--d:1.1s"></i></div>
+      <div class="bar" style="width:12.9%;--c:#c9a76b"><i style="--d:1.5s"></i></div>
+      <div class="bar" style="width:4.7%;--c:#f28bb6"><i style="--d:1.8s"></i></div>
+    </div>
+    <div class="stk-lg fx up" style="--d:1.2s">
+      <div><span><i style="background:#a64a33"></i>土建</span><span>9,273,791 · 82.4%</span></div>
+      <div><span><i style="background:#c9a76b"></i>水电</span><span>1,450,000 · 12.9%</span></div>
+      <div><span><i style="background:#f28bb6"></i>预留费（5%）</span><span>536,189.55 · 4.7%</span></div>
+    </div>
+  </div>
+  <div class="cost-r" id="costBars"><h3 class="fx up" style="--d:.3s">主要分项（元）</h3></div>
+  <div class="cost-note fx up" style="--d:3s">单价按景观面积 12,687.98 ㎡ 折算；各项“具体按做法确定”，为方案阶段估算。</div>
+</section>
+
+<section class="slide dark end" data-dur="8" data-ch="结束" data-title="谢谢观看">
+  <div class="bg kb" style="background-image:url(assets/img/r74.jpg);--kbd:20s"></div>
+  <div class="shade" style="background:rgba(10,8,7,.62)"></div>
+  <h2 class="chars" data-d0=".3" data-st=".25">谢谢观看</h2>
+  <div class="latin fx up" style="--d:1.4s">Thanks for watching</div>
+  <div class="sig fx up" style="--d:1.9s">义巷·漫游集 ｜ 义乌垂直楼项目景观方案设计 ｜ 2026.10</div>
+</section>
+
+</div>
+
+<div id="hud">
+  <span class="ch" id="hudCh"></span>
+  <button id="bMenu" title="目录 (M)">☰ 目录</button>
+  <button id="bPrev" title="上一页 (←)">‹</button>
+  <span class="num" id="hudNum"></span>
+  <button id="bNext" title="下一页 (→)">›</button>
+  <button id="bPlay" title="自动播放 (P)">▶ 自动播放</button>
+  <button id="bFull" title="全屏 (F)">⛶ 全屏</button>
+</div>
+<div id="tick"></div>
+<div id="prog"></div>
+<div id="menu"><span class="x" id="menuX">×</span><div id="menuBody"></div>
+  <div class="help">键盘：← → 翻页 ｜ 空格 下一页 ｜ P 自动播放 ｜ F 全屏 ｜ M 目录 ｜ Home / End 首尾页</div></div>
+
+<script>
+(() => {
+/* ---------- data ---------- */
+const DIST = [
+  {cn:'西片区', en:'Western District', t:[
+    ['花','FLOWER','繁花漫谈','交流 — 花','assets/img/r54.jpg'],
+    ['林','FOREST','疏林漫步','观赏 — 林','assets/img/r49.jpg'],
+    ['场','FIELD','熙盛雅集','聚会 — 场','assets/img/r43.jpg'],
+    ['水','WATER','叠瀑迎宾','造景 — 水','assets/img/r38.jpg']]},
+  {cn:'东片区', en:'Eastern District', t:[
+    ['泉','SPRING','涌泉迎宾','造景 — 泉','assets/img/r60.jpg'],
+    ['草','GRASS','芳庭拾趣','聚会 — 草','assets/img/r63.jpg'],
+    ['林','FOREST','翠林藏憩','休憩 — 林','assets/img/r70.jpg'],
+    ['坪','PLAZA','乐坪欢聚','活动 — 坪','assets/img/r73.jpg']]}
+];
+const ZONES = [
+  {k:'西片区 · WESTERN DISTRICT · 01', cn:'叠瀑迎宾', en:'Cascading Waterfall', fn:'造景', ch:'水',
+   items:['精神堡垒','LOGO 景墙','迎宾叠水','休闲平台'], plan:'assets/img/plan35.jpg',
+   imgs:['assets/img/r36.jpg','assets/img/r37.jpg','assets/img/r38.jpg','assets/img/r40.jpg'],
+   quote:['雕塑 · 赤羽长风','从「鸡毛启市 · 拨浪寻踪」<br>到「一羽微芒 · 万商潮起」']},
+  {k:'西片区 · WESTERN DISTRICT · 02', cn:'熙盛雅集', en:'Xisheng Elegant', fn:'聚会', ch:'场',
+   items:['休闲座凳','摩登廊架','雅集场地','趣味跳泉'], plan:'assets/img/plan42.jpg',
+   imgs:['assets/img/r43.jpg','assets/img/r44.jpg','assets/img/r47.jpg']},
+  {k:'西片区 · WESTERN DISTRICT · 03', cn:'疏林漫步', en:'Strolling through the Sparse Woods', fn:'观赏', ch:'林',
+   items:['疏林绿岛','时尚餐车','休闲外摆'], plan:'assets/img/plan48.jpg',
+   imgs:['assets/img/r49.jpg','assets/img/r50.jpg']},
+  {k:'西片区 · WESTERN DISTRICT · 04', cn:'繁花漫谈', en:'Musings on Blossoms', fn:'交流', ch:'花',
+   items:['汀步','漫谈外摆平台','精致叠水','对景水景','电梯厅'], plan:'assets/img/plan52.jpg',
+   imgs:['assets/img/r53.jpg','assets/img/r54.jpg']},
+  {k:'东片区 · EASTERN DISTRICT · 01', cn:'涌泉迎宾', en:'Welcoming Springs', fn:'造景', ch:'泉',
+   items:['LOGO 景墙','树阵广场','休憩座凳'], plan:'assets/img/plan58.jpg',
+   imgs:['assets/img/r59.jpg','assets/img/r60.jpg']},
+  {k:'东片区 · EASTERN DISTRICT · 02', cn:'芳庭拾趣', en:'Delights Found in the Garden', fn:'聚会', ch:'草',
+   items:['芳草甸','趣味秋千','电梯厅','地库出入口','围合景墙'], plan:'assets/img/plan62.jpg',
+   imgs:['assets/img/r63.jpg','assets/img/r64.jpg','assets/img/r66.jpg','assets/img/r67.jpg'],
+   caps:['效果展示','效果展示','景墙方案一','景墙方案二']},
+  {k:'东片区 · EASTERN DISTRICT · 03', cn:'翠林藏憩', en:'A Quiet Retreat amidst Emerald', fn:'休憩', ch:'林',
+   items:['休闲吧台','林下休闲外摆'], plan:'assets/img/plan69.jpg',
+   imgs:['assets/img/r70.jpg','assets/img/r71.jpg']},
+  {k:'东片区 · EASTERN DISTRICT · 04', cn:'乐坪欢聚', en:'Joyful Gathering at Leping', fn:'活动', ch:'坪',
+   items:['休憩坐凳','欢聚乐坪','退层休闲平台'], plan:'assets/img/plan72.jpg',
+   imgs:['assets/img/r73.jpg','assets/img/r74.jpg']},
+  {k:'商务酒店区 · BUSINESS HOTEL ZONE', cn:'商务酒店区', en:'Business Hotel Zone', fn:'迎宾', ch:'商',
+   items:['商办入口特色装置','对景水景','商业外摆','昭示构筑'], plan:'assets/img/plan76.jpg',
+   imgs:['assets/img/r77.jpg','assets/img/r78.jpg']},
+  {k:'南北沿街 · STREET FRONT', cn:'沿街商业外摆', en:'Street-front Outdoor Seating', fn:'外摆', ch:'街',
+   items:['南北沿街商业外摆区','特色外摆铺装','可移动花箱'], plan:'assets/img/plan79.jpg',
+   imgs:['assets/img/r80.jpg','assets/img/r81.jpg']}
+];
+const LEGEND = [
+  ['办公入口装置',[[22.45,18.9]]],['入口特色铺装',[[16.45,26.2]]],['对景水景',[[23.15,39.2]]],['车行出入口',[[22.85,67.2],[75.25,47.5]]],
+  ['林下休憩平台',[[27.85,38.9]]],['林屿漫步',[[37.05,39.5]]],['景观廊架',[[41.05,45.4]]],['旱喷广场',[[44.4,44.3]]],
+  ['休闲座凳',[[46.45,39.9],[45.45,50.8]]],['水景平台',[[49.65,53.9]]],['LOGO 景墙',[[51.65,39.0],[57.35,39.0]]],['树阵广场',[[59.5,49.2]]],
+  ['芳草庭',[[63.15,42.1]]],['弧形景墙',[[73.3,36.7]]],['林下休憩平台',[[79.85,40.7]]],['欢聚休闲区',[[85.35,40.4]]],['地库出入口',[[20.45,51.5],[72.2,42.1]]]
+];
+const NODES = [ // x, name, fn, color
+  [420,'繁花漫谈','交流—花','#c9a76b'],[565,'疏林漫步','观赏—林','#c9a76b'],[710,'熙盛雅集','聚会—场','#c9a76b'],[870,'叠瀑迎宾','造景—水','#c9a76b'],
+  [1110,'涌泉迎宾','造景—泉','#d43a7f'],[1260,'芳庭拾趣','聚会—草','#d43a7f'],[1405,'翠林藏憩','休憩—林','#d43a7f'],[1555,'乐坪欢聚','活动—坪','#d43a7f']
+];
+const PLANTS = [
+  ['上木',['娜塔栎','丛生沙朴','榉树','乌桕','紫薇'],1],
+  ['下木',['大叶黄杨球','亮金女贞球','海桐球','银杏'],6],
+  ['地被',['肾蕨','大吴风草','迷迭香','狐尾天门冬','芙蓉菊','蓝花鼠尾草','大花飞燕草','八仙花','六月雪',
+          '小叶栀子花','小叶栀子花','萼距花','西洋蓍草','洋水仙','木贼','天堂鸟','玉簪','一叶兰'],10]
+];
+const PL_IMG = ['assets/img/pl01.jpg','assets/img/pl02.jpg','assets/img/pl03.jpg','assets/img/pl04.jpg','assets/img/pl05.jpg','assets/img/pl06.jpg','assets/img/pl07.jpg','assets/img/pl08.jpg','assets/img/pl09.jpg','assets/img/pl10.jpg','assets/img/pl11.jpg','assets/img/pl12.jpg','assets/img/pl13.jpg','assets/img/pl14.jpg','assets/img/pl15.jpg','assets/img/pl16.jpg','assets/img/pl17.jpg','assets/img/pl18.jpg','assets/img/pl19.jpg','assets/img/pl20.jpg','assets/img/pl21.jpg','assets/img/pl22.jpg','assets/img/pl23.jpg','assets/img/pl24.jpg','assets/img/pl25.jpg','assets/img/pl26.jpg','assets/img/pl27.jpg'];
+const EIGHT = [
+  ['一境','叠瀑迎宾','春秋','乌桕、榉树','临水搭配姿态飘逸的乌桕点缀秋色，榉树作背景并为下沉卡座提供绿荫；耐湿常绿地被软化水景与铺装边界。'],
+  ['二境','熙盛雅集','夏秋','榉树','冠大荫浓的榉树为花坛坐凳提供绿荫，并为中间广场形成围合感；花箱内精心搭配花境植物。'],
+  ['三境','疏影漫步','秋','娜塔栎','流线型绿岛孤植挺拔的娜塔栎，突出秋季色叶；通透常绿观叶服务餐车与外摆，打造惬意漫步街区。'],
+  ['四境','繁花漫谈','春夏','丛生紫薇','南北间距较近，以小乔木丛生紫薇为主景；大叶黄杨球、大吴风草为常绿基底，点缀白蓝紫花卉。'],
+  ['五境','涌泉迎宾','春秋','乌桕','乌桕秋叶与灵动涌泉相映，整洁的常绿观叶与蓝紫调花境强化入口仪式感与商业活力。'],
+  ['六境','芳庭拾趣','秋','娜塔栎','娜塔栎散点于开阔草坪形成疏林草地，提供夏日斑驳遮阴，打造全龄休闲芳庭。'],
+  ['七境','翠林藏憩','春夏','丛生沙朴','丛生沙朴撑起浓荫伞盖，打造林下吧台与休憩区；饱满观叶包裹座椅，营造半围合私享空间。'],
+  ['八境','乐坪欢聚','秋','娜塔栎','娜塔栎作为贯穿整条景观轴线的主要树种，秋季红色叶形成最大的植物景观特色。']
+];
+const COST = [['花岗岩铺装',4543191],['水景（含旱喷）',1440000],['植物',1327200],['景观小品',700000],['廊架',600000],['空中雕塑',300000],['水',300000],['电',300000],['多层休闲平台',250000],['卡座',200000]];
+
+/* ---------- build generated slides ---------- */
+const pad = n => String(n).padStart(2,'0');
+document.querySelectorAll('.district').forEach(s => {
+  const d = DIST[+s.dataset.dist];
+  s.innerHTML = `<div class="dist-t"><div class="c fx up">${d.cn}</div><div class="latin fx up" style="--d:.2s">${d.en}</div></div>
+  <div class="tiles">${d.t.map((t,i)=>`<div class="tile fx rise" style="--d:${(.3+i*.2).toFixed(2)}s"><img src="${t[4]}" alt="">
+   <div class="tx"><div class="big">${t[0]}</div><div class="latin">${t[1]}</div><div class="nm">${t[2]}</div><div class="fn">${t[3]}</div></div></div>`).join('')}</div>`;
+});
+document.querySelectorAll('.zone').forEach(s => {
+  const z = ZONES[+s.dataset.z];
+  s.dataset.title = z.cn; s.dataset.dur = Math.max(9, z.imgs.length * 4.5 + 1);
+  s.innerHTML = `<div class="zl">
+    <div class="kick fx up" style="--d:.2s">${z.k}</div>
+    <h2 class="fx up" style="--d:.35s${z.cn.length>5?';font-size:68px;letter-spacing:.12em':''}">${z.cn}</h2>
+    <div class="zen fx up" style="--d:.5s">${z.en}</div>
+    <div class="theme fx left" style="--d:.7s"><div class="ch">${z.ch}</div><span>${z.fn} — ${z.ch}</span></div>
+    <ul class="items">${z.items.map((t,i)=>`<li class="fx up" style="--d:${(.9+i*.12).toFixed(2)}s"><b>${pad(i+1)}</b>${t}</li>`).join('')}</ul></div>
+  <div class="plan fx up" style="--d:1.2s"><img src="${z.plan}" alt="分区平面"><em>分区平面</em></div>
+  <div class="zr fx iris" style="--d:.05s"><div class="gal">${z.imgs.map(u=>`<img src="${u}" alt="">`).join('')}
+    ${z.quote?`<div class="quote fx up" style="--d:1.4s"><b>${z.quote[0]}</b><span>${z.quote[1]}</span></div>`:''}
+    <div class="cap"><span class="ct">${(z.caps||[])[0]||'效果展示'}</span><div class="dots">${z.imgs.map(()=>'<i></i>').join('')}</div></div></div></div>`;
+  if (z.caps) s.querySelector('.gal').dataset.caps = JSON.stringify(z.caps);
+});
+// master-plan legend
+document.getElementById('legend').innerHTML = LEGEND.map((l,i)=>`<li class="fx up" style="--d:${(.6+i*.05).toFixed(2)}s"><b>${pad(i+1)}</b>${l[0]}</li>`).join('');
+// function nodes
+document.getElementById('fnNodes').innerHTML = NODES.map((n,i)=>`<g class="pop" style="--d:${(2.5+i*.15).toFixed(2)}s"><circle cx="${n[0]}" cy="300" r="66" fill="${n[3]}"/>
+  <text x="${n[0]}" y="296" fill="#fff" font-size="26">${n[1]}</text><text x="${n[0]}" y="328" fill="#fff" font-size="19" opacity=".85">${n[2]}</text></g>`).join('');
+// plant wall
+{
+  const tile = (name,img,d) => `<div class="pl flip" style="--d:${d.toFixed(2)}s"><div class="ph"><img src="${img}" alt="${name}"></div><span>${name}</span></div>`;
+  let d = .3, h = '<div style="display:grid;grid-template-columns:5fr 4fr;gap:36px">';
+  PLANTS.slice(0,2).forEach(([g,names,start]) => {
+    h += `<div><h4 class="fx up" style="--d:${d.toFixed(2)}s">［ ${g} ］</h4><div class="row" style="grid-template-columns:repeat(${names.length},1fr)">` +
+      names.map((n,i)=>tile(n,PL_IMG[start-1+i],d+=.07)).join('') + '</div></div>';
+  });
+  h += '</div>';
+  const [g,names,start] = PLANTS[2];
+  h += `<h4 class="fx up" style="--d:${d.toFixed(2)}s">［ ${g} ］</h4>`;
+  for (let r=0;r<2;r++) h += '<div class="row">' + names.slice(r*9,r*9+9).map((n,i)=>tile(n,PL_IMG[start-1+r*9+i],d+=.05)).join('') + '</div>';
+  document.getElementById('plantWall').innerHTML = h;
+}
+// eight scenes
+{
+  const cls = {春:'s-spr',夏:'s-sum',秋:'s-aut'};
+  const grad = s => s==='秋' ? 'linear-gradient(90deg,#d06a2b,#e7a04a)' : s==='春秋' ? 'linear-gradient(90deg,#e48aa9,#d06a2b)' : s==='夏秋' ? 'linear-gradient(90deg,#5d9a4a,#d06a2b)' : 'linear-gradient(90deg,#e48aa9,#5d9a4a)';
+  document.getElementById('eight').innerHTML = EIGHT.map((e,i)=>`<div class="e8 fx up" style="--d:${(.2+i*.12).toFixed(2)}s">
+    <div class="no">${e[0]}</div><h3>${e[1]}</h3><div class="ss">${[...e[2]].map(c=>`<i class="${cls[c]}">${c}</i>`).join('')}</div>
+    <div class="tr">主干树：<b>${e[3]}</b></div><p>${e[4]}</p><div class="leafbar bar"><i style="--d:${(.8+i*.12).toFixed(2)}s;background:${grad(e[2])}"></i></div></div>`).join('');
+}
+// cost bars
+{
+  const max = COST[0][1];
+  document.getElementById('costBars').insertAdjacentHTML('beforeend', COST.map((c,i)=>`<div class="cr fx right" style="--d:${(.5+i*.1).toFixed(2)}s"><span>${c[0]}</span>
+    <div class="bar"><i style="width:${(c[1]/max*100).toFixed(1)}%;--d:${(.8+i*.1).toFixed(2)}s"></i></div><span class="n">${c[1].toLocaleString('en-US')}</span></div>`).join(''));
+}
+// fast streaks + slow motes
+{
+  let h=''; for (let i=0;i<46;i++){ h+=`<i style="top:${(Math.random()*100).toFixed(1)}%;--sp:${(.35+Math.random()*.6).toFixed(2)}s;--dl:-${(Math.random()).toFixed(2)}s;opacity:${(.3+Math.random()*.7).toFixed(2)}"></i>`; }
+  document.getElementById('streaks').innerHTML = h;
+  let m=''; for (let i=0;i<34;i++){ m+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;--z:${(3+Math.random()*7).toFixed(1)}px;--sp:${(6+Math.random()*8).toFixed(1)}s;--mx:${(Math.random()*120-60).toFixed(0)}px;--my:${(Math.random()*120-60).toFixed(0)}px"></i>`; }
+  document.getElementById('motes').innerHTML = m;
+}
+// split characters
+document.querySelectorAll('.chars').forEach(el => {
+  const d0 = parseFloat(el.dataset.d0||0), st = parseFloat(el.dataset.st||.08);
+  el.innerHTML = [...el.textContent].map((c,i)=>`<span style="--d:${(d0+i*st).toFixed(2)}s">${c}</span>`).join('');
+});
+
+/* ---------- engine ---------- */
+const stage = document.getElementById('stage');
+const slides = [...stage.querySelectorAll(':scope > .slide')];
+const N = slides.length;
+let cur = -1, playing = false, timers = [], autoT = null;
+const fit = () => stage.style.setProperty('--s', Math.min(innerWidth/1920, innerHeight/1080));
+addEventListener('resize', fit); fit();
+
+const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+const every = (fn, ms) => timers.push(setInterval(fn, ms));
+const clearTimers = () => { timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = []; };
+
+function countUp(el) {
+  const to = parseFloat(el.dataset.count), dec = +(el.dataset.dec||0);
+  const fx = el.closest('.fx'); const delay = fx ? parseFloat(getComputedStyle(fx).getPropertyValue('--d'))*1000 || 0 : 0;
+  const fmt = v => v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  el.textContent = fmt(0);
+  later(() => {
+    const t0 = performance.now(), dur = 1800;
+    const step = now => { const p = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-p,3);
+      el.textContent = fmt(to*e); if (p<1 && el.closest('.slide.on')) requestAnimationFrame(step); else el.textContent = fmt(to); };
+    requestAnimationFrame(step);
+  }, delay + 200);
+}
+
+function runGallery(g) {
+  const imgs = [...g.querySelectorAll(':scope > img')], dots = [...g.querySelectorAll('.dots i')];
+  const ct = g.querySelector('.ct'), caps = g.dataset.caps ? JSON.parse(g.dataset.caps) : null;
+  let k = 0;
+  const show = () => { imgs.forEach((im,i)=>im.classList.toggle('cur',i===k)); dots.forEach((d,i)=>d.classList.toggle('cur',i===k)); if (caps && ct) ct.textContent = caps[k]; };
+  show();
+  if (imgs.length > 1) every(() => { k = (k+1) % imgs.length; show(); }, 4500);
+}
+
+function runMasterPlan() {
+  const mp = document.getElementById('mp'), lis = [...document.querySelectorAll('#legend li')];
+  mp.querySelectorAll('.hot').forEach(h=>h.remove());
+  let k = -1;
+  const step = () => {
+    mp.querySelectorAll('.hot').forEach(h=>h.remove()); lis.forEach(l=>l.classList.remove('cur'));
+    k = (k+1) % LEGEND.length; lis[k].classList.add('cur');
+    LEGEND[k][1].forEach(([x,y]) => { const h = document.createElement('div'); h.className='hot'; h.style.left=x+'%'; h.style.top=y+'%'; mp.appendChild(h); requestAnimationFrame(()=>requestAnimationFrame(()=>h.classList.add('show'))); });
+  };
+  later(() => { step(); every(step, 820); }, 1800);
+}
+
+function runLight(s) {
+  const badge = document.getElementById('ltBadge');
+  s.classList.remove('holiday'); badge.textContent = '平日模式 · STANDARD';
+  every(() => { const h = s.classList.toggle('holiday'); badge.textContent = h ? '节日模式 · HOLIDAY' : '平日模式 · STANDARD'; }, 3800);
+}
+
+function enter(s) {
+  s.querySelectorAll('[data-count]').forEach(countUp);
+  s.querySelectorAll('.gal').forEach(runGallery);
+  if (s.id === 'mpSlide') runMasterPlan();
+  if (s.id === 'lightSlide') runLight(s);
+  if (s.classList.contains('fs')) { const bg = document.getElementById('fsbg'); bg.style.opacity = 0; later(()=>bg.style.opacity=.35, 50); }
+}
+
+const hudCh = document.getElementById('hudCh'), hudNum = document.getElementById('hudNum'), prog = document.getElementById('prog'), tick = document.getElementById('tick');
+function go(n) {
+  n = Math.max(0, Math.min(N-1, n));
+  if (n === cur) return;
+  clearTimers();
+  if (cur >= 0) slides[cur].classList.remove('on');
+  cur = n;
+  const s = slides[cur];
+  void s.offsetWidth;
+  s.classList.add('on');
+  enter(s);
+  hudCh.textContent = s.dataset.ch || '';
+  hudNum.textContent = pad(cur+1) + ' / ' + pad(N);
+  prog.style.width = ((cur+1)/N*100) + '%';
+  try { history.replaceState(null, '', '#' + (cur+1)); } catch (e) {}
+  schedule();
+  document.querySelectorAll('#menu a').forEach((a,i)=>a.classList.toggle('cur', i===cur));
+}
+function schedule() {
+  clearTimeout(autoT); tick.style.transition='none'; tick.style.width='0';
+  if (!playing) return;
+  if (cur >= N-1) { setPlay(false); return; }
+  const dur = (parseFloat(slides[cur].dataset.dur)||8)*1000;
+  requestAnimationFrame(()=>{ tick.style.transition = `width ${dur}ms linear`; tick.style.width = '100%'; });
+  autoT = setTimeout(() => go(cur+1), dur);
+}
+const bPlay = document.getElementById('bPlay');
+function setPlay(v) { playing = v; bPlay.classList.toggle('act', v); bPlay.textContent = v ? '❚❚ 暂停' : '▶ 自动播放'; schedule(); }
+const next = () => go(cur+1), prev = () => go(cur-1);
+
+/* menu */
+const menu = document.getElementById('menu');
+{
+  let html = '', lastCh = null;
+  slides.forEach((s,i) => {
+    const ch = (s.dataset.ch||'').split(' · ')[0];
+    if (ch !== lastCh) { if (lastCh !== null) html += '</div>'; html += `<h3>${ch}</h3><div class="g">`; lastCh = ch; }
+    html += `<a data-i="${i}"><em>${pad(i+1)}</em>${s.dataset.title||''}</a>`;
+  });
+  document.getElementById('menuBody').innerHTML = html + '</div>';
+  menu.addEventListener('click', e => { const a = e.target.closest('a'); if (a) { go(+a.dataset.i); menu.classList.remove('open'); } });
+}
+const toggleMenu = v => menu.classList.toggle('open', v);
+document.getElementById('menuX').onclick = () => toggleMenu(false);
+
+/* controls */
+document.getElementById('bNext').onclick = next;
+document.getElementById('bPrev').onclick = prev;
+document.getElementById('bMenu').onclick = () => toggleMenu(true);
+bPlay.onclick = () => setPlay(!playing);
+const fullscreen = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); };
+document.getElementById('bFull').onclick = fullscreen;
+stage.addEventListener('click', e => {
+  const t = e.target.closest('[data-goto]');
+  if (t) { go(slides.indexOf(document.getElementById(t.dataset.goto))); return; }
+  const r = stage.getBoundingClientRect();
+  (e.clientX - r.left < r.width * .25) ? prev() : next();
+});
+addEventListener('keydown', e => {
+  if (menu.classList.contains('open') && e.key !== 'Escape' && e.key.toLowerCase() !== 'm') return;
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ': case 'Enter': e.preventDefault(); next(); break;
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': e.preventDefault(); prev(); break;
+    case 'Home': go(0); break;
+    case 'End': go(N-1); break;
+    case 'p': case 'P': setPlay(!playing); break;
+    case 'f': case 'F': fullscreen(); break;
+    case 'm': case 'M': toggleMenu(!menu.classList.contains('open')); break;
+    case 'Escape': toggleMenu(false); break;
+  }
+});
+let tx = null;
+addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) (dx < 0 ? next() : prev()); tx = null; });
+
+/* HUD auto-hide */
+const hud = document.getElementById('hud'); let hideT;
+const wake = () => { hud.classList.remove('hide'); clearTimeout(hideT); hideT = setTimeout(()=>hud.classList.add('hide'), 2800); };
+addEventListener('mousemove', wake); wake();
+
+const start = parseInt(location.hash.slice(1)) || 1;
+go(start - 1);
+if (/[?&]autoplay/.test(location.search)) setPlay(true);
+})();
+</script>
+</body>
+</html>
