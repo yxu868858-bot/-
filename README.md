@@ -8,6 +8,17 @@
 - **源码版**：`index.html` + `assets/img/`，需保持目录结构。
 - 地址后加 `?autoplay` 自动播放；加 `#36` 直接跳到第 36 页（与 PDF 页码相同）。
 
+## 视频版（手机 / 微信）
+
+`tools/make_video.js` 把汇报逐帧录制成 MP4（1080p、25 帧，约 13 分钟），动画与网页版完全一致：
+
+```bash
+NODE_PATH=<playwright 所在 node_modules> node tools/make_video.js dist/义巷漫游集-动态汇报.mp4 --jobs 3
+ffmpeg -i dist/义巷漫游集-动态汇报.mp4 -vf scale=1280:720 -c:v libx264 -crf 25 -movflags +faststart dist/义巷漫游集-动态汇报-720p.mp4
+```
+
+视频文件较大，不纳入仓库。
+
 ## 操作
 
 | 操作 | 按键 |
