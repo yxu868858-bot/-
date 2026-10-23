@@ -212,8 +212,7 @@ p{margin:0}
 /* 总图标注 */
 .mp{position:absolute;left:0;right:0;top:170px;height:568px;overflow:hidden}
 .mp img{width:100%;height:100%;object-fit:cover}
-.hot{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:4px solid var(--rose);opacity:0;transform:scale(2);transition:all .6s var(--ease)}
-.hot.show{opacity:1;transform:scale(1)}
+.hot{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:4px solid var(--rose);opacity:0}
 .hot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--rose);animation:ring 1.6s ease-out infinite}
 @keyframes ring{from{transform:scale(.6);opacity:1}to{transform:scale(3.2);opacity:0}}
 .legend{position:absolute;left:96px;right:96px;top:770px;display:grid;grid-template-columns:repeat(6,1fr);gap:12px 20px;list-style:none;margin:0;padding:0}
@@ -310,6 +309,8 @@ p{margin:0}
 /* ---------- 控制栏 ---------- */
 #hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 20px;font:14px/1 var(--sans);color:#eee;background:linear-gradient(0deg,rgba(0,0,0,.65),transparent);transition:opacity .5s}
 #hud.hide{opacity:0}
+.render #hud,.render #prog,.render #tick{display:none}
+.render #stage{cursor:none}
 #hud .ch{flex:1;letter-spacing:.15em;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hud button{all:unset;cursor:pointer;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.12);font-size:14px;white-space:nowrap}
 #hud button:hover{background:rgba(255,255,255,.25)}
@@ -617,7 +618,7 @@ page('PART 3 · 设计主题', '义乌印象', 'dark', 8, () => `
   <div class="pn">24</div>`);
 
 page('PART 3 · 设计主题', '设计主题 FAST / SLOW', 'dark fs', 13, () => `
-  <div class="bg kb" style="background-image:url(${img('theme')});--kbd:16s;opacity:0;transition:opacity 2s" data-fsbg></div>
+  <div class="bg kb" style="background-image:url(${img('theme')});--kbd:16s;opacity:0" data-fsbg></div>
   <div class="shade" style="background:linear-gradient(135deg,rgba(120,20,70,.55),rgba(60,40,10,.35))"></div>
   <div class="streaks" data-streaks></div>
   <div class="fastt"><div class="w">FAST</div><p>义乌是一座“快”的城市——全球商贸、物流、人流日夜不息。</p></div>
@@ -930,49 +931,55 @@ document.querySelectorAll('.chars').forEach(el => {
 }
 
 /* ---------- 播放引擎 ---------- */
-let cur = -1, playing = false, timers = [], autoT = null;
+let cur = -1, playing = false, autoT = null;
 const fit = () => stage.style.setProperty('--s', Math.min(innerWidth / 1920, innerHeight / 1080));
 addEventListener('resize', fit); fit();
-const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-const every = (fn, ms) => timers.push(setInterval(fn, ms));
-const clearTimers = () => { timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = []; };
 
+/* 随时间变化的脚本效果都写成"时间 → 画面"的函数（ticker），
+   正常播放时由动画帧驱动，录制视频时由 __deck.seek() 精确驱动 */
+let tickers = [], t0 = 0;
+const ease = p => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 function countUp(el) {
   const to = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0);
   const host = el.closest('[style*="--d"]');
-  const delay = host ? parseFloat(getComputedStyle(host).getPropertyValue('--d')) * 1000 || 0 : 0;
+  const delay = (host ? parseFloat(getComputedStyle(host).getPropertyValue('--d')) * 1000 || 0 : 0) + 200;
   const fmt = v => v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-  el.textContent = fmt(0);
-  later(() => {
-    const t0 = performance.now(), dur = 1800;
-    const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
-      el.textContent = fmt(to * e); if (p < 1 && el.closest('.slide.on')) requestAnimationFrame(step); else el.textContent = fmt(to); };
-    requestAnimationFrame(step);
-  }, delay + 200);
+  tickers.push(t => { el.textContent = fmt(to * ease((t - delay) / 1800)); });
 }
 function runMasterPlan() {
   const mp = document.getElementById('mp'), lis = [...document.querySelectorAll('#mpSlide .legend li')];
-  let k = -1;
-  const step = () => {
-    mp.querySelectorAll('.hot').forEach(h => h.remove()); lis.forEach(l => l.classList.remove('cur'));
-    k = (k + 1) % LEGEND.length; lis[k].classList.add('cur');
-    LEGEND[k][1].forEach(([x, y]) => { const h = document.createElement('div'); h.className = 'hot'; h.style.left = x + '%'; h.style.top = y + '%'; mp.appendChild(h); requestAnimationFrame(() => requestAnimationFrame(() => h.classList.add('show'))); });
-  };
-  mp.querySelectorAll('.hot').forEach(h => h.remove());
-  later(() => { step(); every(step, 820); }, 1800);
+  let shown = -2, hots = [];
+  tickers.push(t => {
+    const k = Math.floor((t - 1800) / 820), idx = k < 0 ? -1 : k % LEGEND.length;
+    if (idx !== shown) {
+      shown = idx;
+      hots.forEach(h => h.remove()); hots = [];
+      lis.forEach((l, i) => l.classList.toggle('cur', i === idx));
+      if (idx >= 0) LEGEND[idx][1].forEach(([x, y]) => {
+        const h = document.createElement('div'); h.className = 'hot'; h.style.left = x + '%'; h.style.top = y + '%';
+        mp.appendChild(h); hots.push(h);
+      });
+    }
+    const p = ease((t - 1800 - Math.max(k, 0) * 820) / 600);
+    hots.forEach(h => { h.style.opacity = p; h.style.transform = `scale(${2 - p})`; });
+  });
 }
 function enter(s) {
+  tickers = [];
   s.querySelectorAll('[data-count]').forEach(countUp);
   if (s.id === 'mpSlide') runMasterPlan();
   const bg = s.querySelector('[data-fsbg]');
-  if (bg) { bg.style.opacity = 0; later(() => bg.style.opacity = .55, 3600); }
+  if (bg) tickers.push(t => { bg.style.opacity = .55 * ease((t - 3600) / 2000); });
+  t0 = performance.now();
+  tickers.forEach(f => f(0));
 }
+const RENDER = /[?&]render/.test(location.search);
+if (!RENDER) (function loop(now) { const t = now - t0; tickers.forEach(f => f(t)); requestAnimationFrame(loop); })(performance.now());
 
 const hudCh = document.getElementById('hudCh'), hudNum = document.getElementById('hudNum'), prog = document.getElementById('prog'), tick = document.getElementById('tick');
 function go(n) {
   n = Math.max(0, Math.min(N - 1, n));
   if (n === cur) return;
-  clearTimers();
   if (cur >= 0) slides[cur].classList.remove('on');
   cur = n;
   const s = slides[cur];
@@ -1043,6 +1050,22 @@ const hud = document.getElementById('hud'); let hideT;
 const wake = () => { hud.classList.remove('hide'); clearTimeout(hideT); hideT = setTimeout(() => hud.classList.add('hide'), 2800); };
 addEventListener('mousemove', wake); wake();
 
+/* 录制视频用：?render 模式下隐藏控制栏，由外部脚本逐帧调用 */
+if (RENDER) {
+  document.documentElement.classList.add('render');
+  window.__deck = {
+    N, titles: SLIDES.map(s => s.t), durs: SLIDES.map(s => s.dur),
+    go: i => { go(i); void document.body.offsetWidth; },
+    seek: ms => {
+      for (const a of document.getAnimations()) {
+        a.pause();
+        // 停在终点前 0.5ms：动画一旦"结束"会被浏览器回收，之后就无法再拨回
+        a.currentTime = Math.min(ms, a.effect.getComputedTiming().endTime - .5);
+      }
+      tickers.forEach(f => f(ms));
+    },
+  };
+}
 go((parseInt(location.hash.slice(1)) || 1) - 1);
 if (/[?&]autoplay/.test(location.search)) setPlay(true);
 })();
