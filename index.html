@@ -51,6 +51,16 @@ p{margin:0}
 .bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;transition:transform .3s}
 .on .bar i{transform:scaleX(1);transition:transform 1.4s var(--ease) var(--d,0s)}
 
+/* 分析图生长动画 */
+.ly{display:block;width:100%;height:100%;overflow:visible}
+.lyr{opacity:0;transform-box:fill-box;transform-origin:center}
+.on .lyr.grow{animation:lyGrow 1.4s cubic-bezier(.2,.8,.2,1) var(--d) both}
+.on .lyr.wipe{animation:lyWipe 1.4s cubic-bezier(.7,0,.2,1) var(--d) both}
+.on .lyr.pop{animation:lyPop .8s cubic-bezier(.3,1.5,.5,1) var(--d) both}
+@keyframes lyGrow{from{opacity:0;clip-path:circle(0% at 50% 50%);transform:scale(.92)}30%{opacity:1}to{opacity:1;clip-path:circle(71% at 50% 50%);transform:none}}
+@keyframes lyWipe{from{opacity:1;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes lyPop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}
+
 /* ---------- 通用版式 ---------- */
 .hd{position:absolute;left:96px;top:56px;z-index:6}
 .hd b{display:block;font-family:var(--serif);font-weight:500;font-size:40px;letter-spacing:.08em;line-height:1.2}
@@ -278,7 +288,7 @@ p{margin:0}
 .lg li{display:flex;align-items:center;gap:14px;font-size:22px;padding:7px 0;color:#e6dccd}
 .lg i{width:30px;height:8px;border-radius:4px}
 .lg li.ho{color:var(--rose2)}
-.on .glow img{animation:glow 2.4s ease-in-out infinite alternate}
+.on .glow img,.on .glow svg{animation:glow 2.4s ease-in-out infinite alternate}
 @keyframes glow{from{filter:brightness(.85)}to{filter:brightness(1.25) saturate(1.2)}}
 
 /* 造价表 */
@@ -316,7 +326,7 @@ p{margin:0}
 #menu a em{font-style:normal;opacity:.6;margin-right:10px;font-family:var(--latin)}
 #menu .x{position:fixed;right:24px;top:18px;font-size:30px;cursor:pointer}
 #menu .help{font-size:14px;opacity:.6;margin-top:24px;line-height:1.8}
-@media (prefers-reduced-motion:reduce){.on .kb{animation:none}.streaks i,.motes i{animation:none}}
+@media (prefers-reduced-motion:reduce){.on .kb{animation:none}.lyr{opacity:1!important;animation:none!important}.streaks i,.motes i{animation:none}}
 </style>
 </head>
 <body>
@@ -335,6 +345,7 @@ p{margin:0}
 <div id="menu"><span class="x" id="menuX">×</span><div id="menuBody"></div>
   <div class="help">键盘：← → 翻页 ｜ 空格 下一页 ｜ P 自动播放 ｜ F 全屏 ｜ M 目录 ｜ Home / End 首尾页 ｜ 页码与原方案 PDF 页码一一对应</div></div>
 
+<script src="assets/layers/layers.js"></script>
 <script>
 (() => {
 /* 图片路径：单文件版由 build.py 注入 window.IMG（内嵌图片），源码版读取 assets/img/ */
@@ -343,6 +354,23 @@ const pad = n => String(n).padStart(2, '0');
 let D = 0;                       // 当前页的动画时序游标（秒）
 const d = (step = .12) => (D += step).toFixed(2) + 's';
 const fx = (cls, step, css = '') => `class="fx ${cls}" style="--d:${d(step)};${css}"`;
+/* 分析图生长动画：若 assets/layers 中有该图的图层，则底图之上逐层"长"出色块、箭头与标签 */
+let END = 0;
+function pic(name, alt = '', start = .9, fit = 'meet') {
+  const L = window.LAYERS && window.LAYERS[name];
+  if (!L) return `<img src="${img(name)}" alt="${alt}"${fit === 'slice' ? ' style="object-fit:cover"' : ''}>`;
+  const area = L.w * L.h;
+  const ctx = L.layers.filter(l => l.w * l.h > .25 * area), rest = L.layers.filter(l => !ctx.includes(l));
+  const step = Math.min(.45, 3.2 / Math.max(1, rest.length));
+  const delay = new Map();
+  let t = start;
+  ctx.forEach(l => { delay.set(l, t); t += .5; });     // 先铺开大面积的底层（如地块、底图线稿）
+  rest.forEach(l => { delay.set(l, t); t += step; });  // 再按原图绘制顺序逐层生长
+  END = Math.max(END, t + 1.4);
+  return `<svg class="ly" viewBox="0 0 ${L.w} ${L.h}" preserveAspectRatio="xMidYMid ${fit}" role="img" aria-label="${alt}">
+    <image href="${L.base}" width="${L.w}" height="${L.h}"/>
+    ${L.layers.map(l => `<image class="lyr ${l.kind}" href="${l.src}" x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" style="--d:${delay.get(l).toFixed(2)}s"/>`).join('')}</svg>`;
+}
 const hd = (cn, en) => `<div class="hd fx down" style="--d:.05s"><b>${cn}</b><span>${en}</span></div>`;
 
 /* 每页：ch=篇章，t=页名，cls=版式类，dur=自动播放停留秒数，html=生成内容的函数 */
@@ -442,12 +470,12 @@ page('PART 1 · 场地条件', '项目区位', '', 11, () => `
     <p class="lead fx up" style="--d:${d(.2)}">项目距离义乌站直线距离 <b>10 公里</b>，义乌机场 <b>8.5 公里</b>，均在项目西南方向；项目西北方向主要为城市的体育文化用地，北侧为办公楼，其他方向为住宅区。</p>
     <p class="lead fx up" style="--d:${d(.2)};margin-top:26px"><b class="rose">西北向</b>因承接主要城市人流，宜作为项目的<b>主入口及形象展示面</b>，强化公共性与开放性；<b class="rose">其余方向</b>以周边社区居民为主要服务对象，宜<b>弱化边界感</b>，营造亲切、宜人的社区氛围。</p>
   </div>
-  <div class="box fx zoom" style="--d:.2s;left:700px;right:96px;top:150px;bottom:70px"><img src="${img('map')}" alt="区位图"></div>
+  <div class="box fx zoom" style="--d:.2s;left:700px;right:96px;top:150px;bottom:70px">${pic('map', '区位图', .9)}</div>
   <div class="pn">04</div>`);
 
 page('PART 1 · 场地条件', '项目概况', '', 10, () => `
   ${hd('项目概况', 'Project Overview')}
-  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:160px;height:640px"><img src="${img('site')}" alt="红线范围"></div>
+  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:160px;height:640px">${pic('site', '红线范围', .9)}</div>
   <div style="position:absolute;left:96px;right:96px;top:840px;display:grid;grid-template-columns:repeat(4,1fr);gap:30px">
     ${[['19519.18', 2, '㎡', '用地红线面积'], ['6831.2', 1, '㎡', '建筑占地面积'], ['12687.98', 2, '㎡', '景观面积'], ['20', 0, '%', '规划绿地率']].map(([v, dec, u, k]) => `
     <div ${fx('up', .15, 'border-top:3px solid var(--rose);padding-top:14px')}><div style="font-family:var(--latin);font-size:72px;line-height:1;color:var(--ink)"><span data-count="${v}" data-dec="${dec}">0</span><small style="font-size:32px;color:var(--ink2)"> ${u}</small></div><div style="font-size:24px;color:var(--ink2);margin-top:8px">${k}</div></div>`).join('')}
@@ -460,7 +488,7 @@ page('PART 1 · 场地条件', '交通分析', '', 10, () => `
     <p class="lead fx up" style="--d:.3s">场地内部实现<b class="rose">人车分流</b>，从而保证环境的安静及安全。<br><br>非机动车位建议<b class="rose">移至人行道</b>。</p>
     <p class="lead-en fx up" style="--d:.5s">Pedestrian and vehicular traffic are separated within the site to ensure a quiet and safe environment. It is recommended that non-motorized vehicle parking spaces be relocated to the pedestrian walkways.</p>
   </div>
-  <div class="box fx zoom" style="--d:.2s;left:580px;right:60px;top:110px;bottom:60px"><img src="${img('traffic')}" alt="交通分析"></div>
+  <div class="box fx zoom" style="--d:.2s;left:580px;right:60px;top:110px;bottom:60px">${pic('traffic', '交通分析', .9)}</div>
   <div class="pn">06</div>`);
 
 page('PART 1 · 场地条件', '竖向分析', '', 9, () => `
@@ -469,12 +497,12 @@ page('PART 1 · 场地条件', '竖向分析', '', 9, () => `
     <p class="lead fx up" style="--d:.3s;font-size:30px">由西向东地势呈<b class="rose">升高趋势</b>，场地内部地势<b class="rose">基本平稳</b>。</p>
     <p class="lead-en fx up" style="--d:.45s">The terrain rises from west to east, while the site itself is generally level.</p>
   </div>
-  <div class="box fx wipe" style="--d:.5s;left:96px;right:96px;top:330px;bottom:60px"><img src="${img('vertical')}" alt="竖向分析"></div>
+  <div class="box fx wipe" style="--d:.5s;left:96px;right:96px;top:330px;bottom:60px">${pic('vertical', '竖向分析', .9)}</div>
   <div class="pn">07</div>`);
 
 page('PART 1 · 场地条件', '建筑业态', '', 8, () => `
   ${hd('建筑业态', 'Building Type')}
-  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:160px;height:760px"><img src="${img('buildtype')}" alt="建筑业态"></div>
+  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:160px;height:760px">${pic('buildtype', '建筑业态', .9)}</div>
   <div style="position:absolute;left:96px;bottom:60px;display:flex;gap:16px">
     ${[['#c9a06c', '垂直商住'], ['#6dbb9b', '酒店商务'], ['#8f9bd6', '一层开闭所'], ['#c779b0', '一层消控室']].map(([c, t]) => `<span class="chip fx up" style="--d:${d(.12)}"><i style="background:${c}"></i>${t}</span>`).join('')}
   </div>
@@ -543,13 +571,13 @@ page('PART 3 · 设计定位', '设计定位', 'dark onimg', 9, () => `
   </div>
   <div class="pn">17</div>`);
 
-function posPage(no, t, en, pic, stmts) {
+function posPage(no, t, en, diagram, stmts) {
   page('PART 3 · 设计定位', t, 'dark', 11, () => `
     <div class="hd fx down" style="--d:.05s"><b>设计定位</b><span>Design Positioning</span></div>
     <div class="pt-title"><h2 class="fx up" style="--d:.2s">${t}</h2><p class="fx up" style="--d:.35s">${en}</p></div>
     <div class="pt-rule fx wipe" style="--d:.5s"></div>
-    <div class="box fx zoom" style="--d:.6s;left:0;right:0;top:280px;height:620px"><img src="${img(pic)}" alt="${t}"></div>
-    <div class="stmts">${stmts.map(([b, s, c], i) => `<div class="stmt fx up" style="--d:${(1.2 + i * .25).toFixed(2)}s;--c:${c}"><b>${b}</b><span>${s}</span></div>`).join('')}</div>
+    <div class="box fx zoom" style="--d:.6s;left:0;right:0;top:280px;height:620px">${pic(diagram, t, 1.3)}</div>
+    <div class="stmts">${stmts.map(([b, s, c], i) => `<div class="stmt fx up" style="--d:${(END - 1 + i * .3).toFixed(2)}s;--c:${c}"><b>${b}</b><span>${s}</span></div>`).join('')}</div>
     <div class="pn">${no}</div>`);
 }
 posPage(18, '布局定位：外引内营，双脉共织', 'Strategic positioning: attracting external resources while managing internally; weaving together dual development paths.', 'layout',
@@ -563,7 +591,7 @@ function stratPage(no, cls, a, b) {
   const col = (s, left) => `<div class="sg" style="left:${left}px">
       <div class="tg fx ${left < 900 ? 'left' : 'right'}" style="--d:${d(.2)};--c:${s.c}">/ ${s.t} /<small>${s.en}</small></div>
       <p class="fx up" style="--d:${d(.15)}">${s.p}</p>
-      <div class="im fx zoom" style="--d:${d(.2)}"><img src="${img(s.img)}" alt="${s.t}"></div></div>`;
+      <div class="im fx zoom" style="--d:${d(.2)}">${pic(s.img, s.t, left < 900 ? .9 : 2.6)}</div></div>`;
   page('PART 3 · 设计策略', `设计策略 · ${a.t} / ${b.t}`, cls, 12, () => `
     ${hd('设计策略', 'Design Strategies')}
     ${col(a, 60)}${col(b, 980)}
@@ -637,7 +665,7 @@ add({ ch: 'PART 4 · 整体布局', t: '总图标注', cls: '', dur: 16, id: 'mp
 
 page('PART 4 · 整体布局', '交通分析 · 断面', '', 12, () => `
   ${hd('交通分析', 'Street Section')}
-  <div class="box fx zoom" style="--d:.2s;left:60px;top:150px;width:900px;height:900px"><img src="${img('section')}" alt="断面分析"></div>
+  <div class="box fx zoom" style="--d:.2s;left:60px;top:150px;width:900px;height:900px">${pic('section', '断面分析', .9)}</div>
   <div style="position:absolute;left:1030px;right:96px;top:160px">
     <div class="fx up" style="--d:.4s;font-family:var(--serif);font-size:34px;margin-bottom:16px"><span class="chip" style="background:var(--rose);color:#fff;border:0;margin-right:16px">本方案</span>横向五段式</div>
     <div class="strip">
@@ -693,7 +721,7 @@ subDivider('PART 5 · 西片区', '西片区', 'Western District');
 
 function districtOverview(no, ch, cn, en, top, tiles) {
   page(ch, `${cn} · 总览`, 'dark', 9, () => `
-    <div class="box fx wipe" style="--d:.1s;left:0;right:0;top:0;height:580px"><img src="${img(top)}" alt="" style="object-fit:cover"></div>
+    <div class="box fx wipe" style="--d:.1s;left:0;right:0;top:0;height:580px">${pic(top, '', .8, 'slice')}</div>
     <div class="hd fx down" style="--d:.05s;top:30px"><b style="color:var(--ink)">${cn}</b><span>${en}</span></div>
     <div class="ov4">${tiles.map(([pic, big, lat, nm], i) => `<div class="t fx rise" style="--d:${(.6 + i * .2).toFixed(2)}s"><img src="${img(pic)}" alt="">
       <div class="tx"><div class="big">${big}</div><div class="latin">${lat}</div><div class="nm">${nm}</div></div></div>`).join('')}</div>
@@ -786,7 +814,7 @@ const EIGHT = [
   ['八境：乐坪欢聚——秋', '娜塔栎', '狐尾天门冬、肾蕨、海芋、大吴风草、芙蓉菊、迷迭香', '以娜塔栎点景，作为贯穿整条景观轴线的最主要景观树种，娜塔栎特有的秋季红色叶形成最大的植物景观特色。下层的草本植物结合卡座种植，柔软的叶片更具亲和性。', '#d9534f']];
 [0, 4].forEach(s => page('PART 6 · 植物设计', `分区植物设计 · ${s ? '五至八境' : '一至四境'}`, '', 14, () => `
   ${hd('分区植物设计', 'Planting by Zone')}
-  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:150px;height:310px"><img src="${img('keyplan')}" alt="八境分布"></div>
+  <div class="box fx wipe" style="--d:.2s;left:96px;right:96px;top:150px;height:310px">${pic('keyplan', '八境分布', .9)}</div>
   ${EIGHT.slice(s, s + 4).map(([h, tr, low, p, c], i) => `<div class="zp fx up" style="--d:${(.6 + i * .2).toFixed(2)}s;--c:${c};left:${96 + i * 442}px">
     <h3>${h}</h3><div class="k"><b>主干树：</b>${tr}</div><div class="k"><b>下层配置：</b>${low}</div>
     <div class="ph"><img src="${img('z' + (s + i + 1))}" alt=""></div><p>${p}</p></div>`).join('')}
@@ -794,7 +822,7 @@ const EIGHT = [
 
 page('PART 6 · 铺装设计', '铺装设计', '', 11, () => `
   ${hd('铺装设计', 'Paving Design')}
-  <div class="box fx zoom" style="--d:.2s;left:60px;top:150px;width:1280px;height:880px"><img src="${img('paving')}" alt="铺装设计"></div>
+  <div class="box fx zoom" style="--d:.2s;left:60px;top:150px;width:1280px;height:880px">${pic('paving', '铺装设计', .9)}</div>
   <div class="use" style="position:absolute;left:1390px;right:96px;top:170px">
     <div class="fx up" style="--d:.4s;font-family:var(--serif);font-size:28px;color:var(--ink);border:0">材料小样<br><span style="font-size:22px;color:var(--ink2)">浪花白 · 夜里雪 · 福鼎黑 · 沉香米黄</span></div>
     ${[['中心广场', '浪花白 + 夜里雪<br>夜里雪 + 福鼎黑'], ['内街漫步通道', '夜里雪 + 福鼎黑'], ['沿街商业界面', '浪花白 + 夜里雪 + 福鼎黑'], ['入口引导性铺装', '夜里雪 + 福鼎黑'], ['休闲场地', '夜里雪 + 福鼎黑<br>沉香米黄整石自然面碎拼<br>夜里雪']]
@@ -805,7 +833,7 @@ page('PART 6 · 铺装设计', '铺装设计', '', 11, () => `
 [['out1', 90], ['out2', 91]].forEach(([p, no]) => page('PART 6 · 外摆分析', `外摆分析 ${no - 89}/2`, '', 9, () => `
   ${hd('外摆分析', 'Outdoor Seating Analysis')}
   <div class="fx up" style="--d:.3s;position:absolute;right:96px;top:80px;font-size:22px;color:var(--ink2)">图中数字为各外摆区面积（㎡）</div>
-  <div class="box fx zoom" style="--d:.2s;left:60px;right:60px;top:150px;bottom:60px"><img src="${img(p)}" alt="外摆分析"></div>
+  <div class="box fx zoom" style="--d:.2s;left:60px;right:60px;top:150px;bottom:60px">${pic(p, '外摆分析', .9)}</div>
   <div class="pn">${no}</div>`));
 
 page('PART 6 · 铺装设计', '铺装意向', '', 8, () => `
@@ -816,9 +844,9 @@ page('PART 6 · 铺装设计', '铺装意向', '', 8, () => `
 page('PART 6 · 照明设计', '照明设计', 'dark', 11, () => `
   ${hd('照明设计', 'Lighting Design')}
   <div class="lt-l fx up" style="--d:.3s;top:150px">平日模式<span>STANDARD MODE</span></div>
-  <div class="lt box fx wipe" style="--d:.4s;top:195px"><img src="${img('light1')}" alt="平日模式"></div>
+  <div class="lt box fx wipe" style="--d:.4s;top:195px">${pic('light1', '平日模式', 1.0)}</div>
   <div class="lt-l fx up" style="--d:1.2s;top:590px;color:var(--rose2)">节日模式<span>HOLIDAY MODE</span></div>
-  <div class="lt box fx wipe glow" style="--d:1.3s;top:635px"><img src="${img('light2')}" alt="节日模式"></div>
+  <div class="lt box fx wipe glow" style="--d:1.3s;top:635px">${pic('light2', '节日模式', 2.0)}</div>
   <ul class="lg" style="top:240px">${[['#f0883e', '庭院灯'], ['#c7e34a', '草坪灯'], ['#e8d44d', '灯带'], ['#3fa1e6', '水景灯带']]
     .map(([c, t], i) => `<li class="fx right" style="--d:${(.6 + i * .1).toFixed(2)}s"><i style="background:${c}"></i>${t}</li>`).join('')}</ul>
   <ul class="lg" style="top:660px">${[['#f0883e', '庭院灯'], ['#c7e34a', '草坪灯'], ['#e8d44d', '灯带'], ['#3fa1e6', '水景灯带'], ['#2fd0ff', '涌泉灯', 1], ['#d043c8', '氛围灯带', 1]]
@@ -882,7 +910,12 @@ page('结束', '谢谢观看', 'dark end', 8, () => `
 
 /* ---------- 生成页面 ---------- */
 const stage = document.getElementById('stage');
-stage.innerHTML = SLIDES.map((s, i) => { D = .1; return `<section class="slide ${s.cls}" data-i="${i}"${s.id ? ` id="${s.id}"` : ''}>${s.html()}</section>`; }).join('');
+stage.innerHTML = SLIDES.map((s, i) => {
+  D = .1; END = 0;
+  const html = s.html();
+  s.dur = Math.max(s.dur || 8, END + 2.5);       // 有生长动画的页面，自动播放时多停留到动画结束
+  return `<section class="slide ${s.cls}" data-i="${i}"${s.id ? ` id="${s.id}"` : ''}>${html}</section>`;
+}).join('');
 const slides = [...stage.children];
 const N = slides.length;
 document.querySelectorAll('.chars').forEach(el => {
