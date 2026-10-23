@@ -1055,7 +1055,13 @@ if (RENDER) {
   document.documentElement.classList.add('render');
   window.__deck = {
     N, titles: SLIDES.map(s => s.t), durs: SLIDES.map(s => s.dur),
-    go: i => { go(i); void document.body.offsetWidth; },
+    go: i => {
+      // 先把上一页残留的动画结束掉（无限循环的直接取消），避免逐页累积拖慢录制
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) { a.cancel(); }
+      }
+      go(i); void document.body.offsetWidth;
+    },
     seek: ms => {
       for (const a of document.getAnimations()) {
         a.pause();
